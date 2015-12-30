@@ -72,7 +72,6 @@ enum direction ai_get(ai *self, board *b)
   uint32 depth = 3;
   struct timeval now;
   uint32 start = 0, end = 0;
-  char *directions[] = {"UP", "DOWN", "LEFT", "RIGHT"};
 
   if (self != NULL)
   {
@@ -97,6 +96,6 @@ enum direction ai_get(ai *self, board *b)
     }
     self->last_dir = best;
   }
-  LOG("best direction is %s", directions[best]);
+
   return best;
 }

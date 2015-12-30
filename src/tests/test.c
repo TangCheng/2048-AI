@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     board_set_value(b, 3, 2, 8);
     board_set_value(b, 3, 3, 16);
     */
-
+    /*
     board_set_value(b, 0, 0, 512);
     board_set_value(b, 0, 1, 256);
     board_set_value(b, 0, 2, 128);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     board_set_value(b, 3, 1, 32);
     board_set_value(b, 3, 2, 16);
     board_set_value(b, 3, 3, 2);
-
+    */
     /*
     board_set_value(b, 0, 0, 0);
     board_set_value(b, 0, 1, 1024);
@@ -101,8 +101,28 @@ int main(int argc, char *argv[])
     board_set_value(b, 3, 2, 1024);
     board_set_value(b, 3, 3, 1024);
     */
+
+    board_set_value(b, 0, 0, 8);
+    board_set_value(b, 0, 1, 0);
+    board_set_value(b, 0, 2, 0);
+    board_set_value(b, 0, 3, 0);
+    board_set_value(b, 1, 0, 4);
+    board_set_value(b, 1, 1, 0);
+    board_set_value(b, 1, 2, 0);
+    board_set_value(b, 1, 3, 4);
+    board_set_value(b, 2, 0, 2);
+    board_set_value(b, 2, 1, 0);
+    board_set_value(b, 2, 2, 0);
+    board_set_value(b, 2, 3, 0);
+    board_set_value(b, 3, 0, 4);
+    board_set_value(b, 3, 1, 0);
+    board_set_value(b, 3, 2, 0);
+    board_set_value(b, 3, 3, 0);
+
     evaluator_monotonicity(eval, b);
     evaluator_smoothness(eval, b);
+    evaluator_empty(eval, b);
+    evaluator_max_value(eval, b);
     evaluator_islands(eval, b);
     evaluator_get_value(eval, b);
     board_destory(&b);

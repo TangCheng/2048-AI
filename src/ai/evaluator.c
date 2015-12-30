@@ -4,10 +4,10 @@
 
 typedef struct _evaluator
 {
-  float   smoothness_weight;
-  float   monotonicity_weight;
-  float   empty_weight;
-  float   max_value_weight;
+  double   smoothness_weight;
+  double   monotonicity_weight;
+  double   empty_weight;
+  double   max_value_weight;
 } evaluator;
 
 #define MAX(a, b)   (((a) >= (b)) ? (a) : (b))
@@ -80,24 +80,24 @@ void evaluator_set_max_value_weight(evaluator *self, float weight)
   }
 }
 
-float evaluator_get_value(evaluator *self, board *b)
+double evaluator_get_value(evaluator *self, board *b)
 {
-  float smoothness = 0.0;
-  float monotonicity = 0.0;
-  float empty = 0.0;
-  float max_value = 0.0;
-  float value = 0.0;
+  double smoothness = 0.0;
+  double monotonicity = 0.0;
+  double empty = 0.0;
+  double max_value = 0.0;
+  double value = 0.0;
 
   if (self != NULL)
   {
-    smoothness = evaluator_smoothness(self, b) * self->smoothness_weight;
-    monotonicity = evaluator_monotonicity(self, b) * self->monotonicity_weight;
+    smoothness = (double)evaluator_smoothness(self, b) * self->smoothness_weight;
+    monotonicity = (double)evaluator_monotonicity(self, b) * self->monotonicity_weight;
     empty = evaluator_empty(self, b) * self->empty_weight;
-    max_value = evaluator_max_value(self, b) * self->max_value_weight;
+    max_value = (double)evaluator_max_value(self, b) * self->max_value_weight;
   }
 
   value = smoothness + monotonicity + empty + max_value;
-  //LOG("value is %d", value);
+  LOG("value is %.13f", value);
   return value;
 }
 
@@ -145,7 +145,7 @@ uint32 evaluator_islands(evaluator *self, board *b)
       free(flags);
     }
   }
-  //LOG("islands = %u", islands);
+  LOG("islands = %u", islands);
   return islands;
 }
 
@@ -188,7 +188,7 @@ int32 evaluator_smoothness(evaluator *self, board *b)
       }
     }
   }
-  //LOG("smoothness is %d", smoothness);
+  LOG("smoothness is %d", smoothness);
   return smoothness;
 }
 
@@ -302,11 +302,11 @@ int32 evaluator_monotonicity(evaluator *self, board *b)
   }
   monotonicity = MAX(totals[UP], totals[DOWN])
      +  MAX(totals[LEFT], totals[RIGHT]);
-  //LOG("monotonicity is %d", monotonicity);
+  LOG("monotonicity is %d", monotonicity);
   return monotonicity;
 }
 
-uint32 evaluator_empty(evaluator *self, board *b)
+double evaluator_empty(evaluator *self, board *b)
 {
   uint64 *pos_array = NULL;
   uint32 empty_count = 0;
@@ -314,7 +314,8 @@ uint32 evaluator_empty(evaluator *self, board *b)
   board_get_empty(b, &pos_array, &empty_count);
   free(pos_array);
 
-  return (uint32)log(empty_count);
+  LOG("empty is %f", log(empty_count));
+  return log(empty_count);
 }
 
 uint32 evaluator_max_value(evaluator *self, board *b)
@@ -331,7 +332,7 @@ uint32 evaluator_max_value(evaluator *self, board *b)
       max = MAX(max, board_get_value(b, x, y));
     }
   }
-
+  LOG("max value is %u", (uint32)(log(max) / log(2)));
   return (uint32)(log(max) / log(2));
 }
 

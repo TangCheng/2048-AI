@@ -12,11 +12,11 @@ void evaluator_set_smoothness_weight(evaluator *self, float weight);
 void evaluator_set_monotonicity_weight(evaluator *self, float weight);
 void evaluator_set_empty_weight(evaluator *self, float weight);
 void evaluator_set_max_value_weight(evaluator *self, float weight);
-float evaluator_get_value(evaluator *self, board *b);
+double evaluator_get_value(evaluator *self, board *b);
 uint32 evaluator_islands(evaluator *self, board *b);
 int32 evaluator_smoothness(evaluator *self, board *b);
 int32 evaluator_monotonicity(evaluator *self, board *b);
-uint32 evaluator_empty(evaluator *self, board *b);
+double evaluator_empty(evaluator *self, board *b);
 uint32 evaluator_max_value(evaluator *self, board *b);
 uint32 evaluator_sum(evaluator *self, board *b);
 

@@ -21,7 +21,7 @@ static void minmax_new_level_for_player(minmax *self, tree_node *node,
   board_data *bd);
 static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   board_data *bd);
-static float minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
+static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
   uint32 positions, uint32 cutoffs);
 
 static void minmax_data_free_callback(void *owner, void *data)
@@ -78,7 +78,7 @@ enum direction minmax_search(minmax *self, board *b, enum direction last_dir,
   uint32 depth)
 {
   enum direction best = BOTTOM_OF_DIRECTION;
-  float best_value = 0;
+  double best_value = 0;
   uint32 tree_depth = 0;
   tree_node *root = NULL;
 
@@ -208,7 +208,6 @@ static void minmax_new_level_for_player(minmax *self, tree_node *node,
     {
       if (calculator_move(self->bc, bd->b, new_bd->b, dir) == true)
       {
-        LOG("new player level node, dir is %u", dir);
         new_bd->dir = dir;
         new_bd->r = COMPUTER_TURN;
         //new_bd->value = evaluator_get_value(self->be, new_bd->b);
@@ -263,11 +262,11 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   free(pos_array);
 }
 
-static float minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
+static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
   uint32 positions, uint32 cutoffs)
 {
-  float value = 0.0;
-  float score = 0.0;
+  double value = 0.0;
+  double score = 0.0;
   board_data *bd = NULL;
   tree_node *child_node = NULL;
 
@@ -277,7 +276,6 @@ static float minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
     if (depth == 0)
     {
       value = evaluator_get_value(self->be, bd->b);
-      //LOG("value is %d", value);
       return value;
     }
     if (bd->r == PLAYER_TURN)

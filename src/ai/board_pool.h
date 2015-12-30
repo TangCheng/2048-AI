@@ -11,7 +11,7 @@ typedef struct _board_data
   enum direction  dir;
   enum round      r;
   board           *b;
-  float           value;
+  double          value;
   int32           alpha;
   int32           beta;
 } board_data;
