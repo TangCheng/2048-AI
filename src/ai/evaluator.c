@@ -315,7 +315,14 @@ double evaluator_empty(evaluator *self, board *b)
   free(pos_array);
 
   //LOG("empty is %f", log(empty_count));
-  return log(empty_count);
+  if (empty_count == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    return log(empty_count);
+  }
 }
 
 uint32 evaluator_max_value(evaluator *self, board *b)

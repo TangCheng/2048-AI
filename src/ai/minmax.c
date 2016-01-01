@@ -107,6 +107,7 @@ enum direction minmax_search(minmax *self, board *b, enum direction last_dir,
       if (root != NULL)
       {
         best_value = minmax_search_engine(self, depth - 1, root);
+        //LOG("best value is %.13f", best_value);
         //LOG("*************** show the tree begin .***********************");
         //minmax_show_tree(self, NULL);
         //LOG("*************** show the tree end .***********************");
