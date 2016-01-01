@@ -198,6 +198,7 @@ static bool game_is_over(game *self)
   uint8 current = self->current_board;
 
   board_get_empty(self->b[self->current_board], &pos_array, &pos_array_len);
+  free(pos_array);
   if (pos_array_len == 0)
   {
     ret &= !calculator_check_direction(self->calc, self->b[current], UP);
@@ -209,7 +210,6 @@ static bool game_is_over(game *self)
   {
     ret = false;
   }
-  free(pos_array);
 
   /*
   uint32 x = 0, y = 0;
