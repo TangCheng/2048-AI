@@ -63,7 +63,7 @@ bool game_create(game **self)
   *self = (game *)malloc(sizeof(game));
   if (*self != NULL)
   {
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < ARRAY_SIZE((*self)->b); i++)
     {
       ret &= board_create(&(*self)->b[i], ROWS_OF_BOARD, COLS_OF_BOARD);
     }
@@ -103,7 +103,7 @@ void game_destory(game **self)
 #else
     input_destory(&(*self)->in);
 #endif
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < ARRAY_SIZE((*self)->b); i++)
     {
       board_destory(&(*self)->b[i]);
     }
@@ -209,6 +209,7 @@ static bool game_is_over(game *self)
   {
     ret = false;
   }
+  free(pos_array);
 
   /*
   uint32 x = 0, y = 0;

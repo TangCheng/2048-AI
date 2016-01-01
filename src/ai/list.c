@@ -38,9 +38,18 @@ bool list_create(list **self)
 
 void list_destory(list **self)
 {
+  list_node *node = NULL;
+
   if (*self != NULL)
   {
     list_clear(*self);
+    node = (*self)->removed;
+    while (node != NULL)
+    {
+      (*self)->removed = node->next;
+      free(node);
+      node = (*self)->removed;
+    }
     free(*self);
     *self = NULL;
   }
@@ -92,17 +101,17 @@ void list_clear(list *self)
 {
   if (self != NULL)
   {
-    list_node *node = NULL;
-    for (node = self->head; node != NULL; node = self->head)
+    list_node *node = self->head;
+    while (node != NULL)
     {
       self->head = node->next;
-      free(node);
+      //free(node);
+      node->next = self->removed;
+      self->removed = node;
+      node = self->head;
     }
-    for (node = self->removed; node != NULL; node = self->removed)
-    {
-      self->removed = node->next;
-      free(node);
-    }
+    self->tail = NULL;
+    self->node_count = 0;
   }
 }
 

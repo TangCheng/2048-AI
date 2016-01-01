@@ -91,11 +91,11 @@ void board_pool_put(board_pool *self, board_data *bd)
 static void board_pool_release_all(board_pool *self)
 {
   board_data *bd = NULL;
-  bd = list_get_from_first(self->board_list);
+  bd = (board_data *)list_get_from_first(self->board_list);
   while (bd != NULL)
   {
     board_destory(&bd->b);
     free(bd);
-    bd = list_get_from_first(self->board_list);
+    bd = (board_data *)list_get_from_first(self->board_list);
   }
 }
