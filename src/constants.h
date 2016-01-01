@@ -23,6 +23,10 @@ typedef enum boolean
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
 #define AUTO_PLAY
+#define THINKING_BY_DEPTH
+#define THINKING_DURATION     200     /* in million seconds */
+#define MIN_SEARCH_DEPTH      3
+#define MAX_SEARCH_DEPTH      15
 
 #define ROWS_OF_BOARD    4
 #define COLS_OF_BOARD    4

@@ -6,7 +6,7 @@
 typedef struct _tree tree;
 typedef struct _tree_node tree_node;
 typedef void (*callback_data_free)(void *owner, void *data);
-typedef bool (*callback_data_compare)(void *data1, void *data2);
+typedef bool (*callback_data_compare)(void *user_data, void *node_data);
 
 bool tree_create(tree **self);
 void tree_destory(tree **self);

@@ -12,8 +12,6 @@ typedef struct _ai
   enum direction    last_dir;
 } ai;
 
-#define THINKING_DURATION     0     /* in million seconds */
-
 static ai *a = NULL;
 
 bool ai_create(ai **self)
@@ -33,7 +31,7 @@ bool ai_create(ai **self)
     {
       minmax_create(&a->engine);
       a->count = 1;
-      a->thinking_duration = THINKING_DURATION;
+      a->thinking_duration = 0;
       a->last_dir = BOTTOM_OF_DIRECTION;
       *self = a;
       ret = true;
@@ -71,7 +69,7 @@ enum direction ai_get(ai *self, board *b)
   enum direction best = BOTTOM_OF_DIRECTION;
   uint32 depth = 3;
   struct timeval now;
-  uint32 start = 0, end = 0;
+  uint64 start = 0, end = 0;
 
   if (self != NULL)
   {
@@ -86,13 +84,17 @@ enum direction ai_get(ai *self, board *b)
           break;
         }
         depth++;
+        if (depth > MAX_SEARCH_DEPTH)
+        {
+          break;
+        }
         gettimeofday(&now, NULL);
         end = now.tv_sec * 1000 + now.tv_usec / 1000;
       } while (end - start < self->thinking_duration);
     }
     else
     {
-      best = minmax_search(self->engine, b, self->last_dir, 15);
+      best = minmax_search(self->engine, b, self->last_dir, MAX_SEARCH_DEPTH);
     }
     self->last_dir = best;
   }

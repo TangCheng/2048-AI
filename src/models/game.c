@@ -50,8 +50,8 @@ static void game_init(game *self)
     free(pos_array);
     board_set_value_by_pos(self->b[self->current_board], pos, val);
   }
-#if defined(AUTO_PLAY)
-  ai_set_thinking_duration(self->a, 500);
+#if defined(AUTO_PLAY) && !defined(THINKING_BY_DEPTH)
+  ai_set_thinking_duration(self->a, THINKING_DURATION);
 #endif
 }
 

@@ -72,9 +72,9 @@ board_data *board_pool_get(board_pool *self)
   {
     bd->dir = BOTTOM_OF_DIRECTION;
     bd->r = BOTTOM_OF_ROUND;
-    bd->value = 0;
-    bd->alpha = ~(1 << 31);
-    bd->beta = ~0;
+    bd->value = 0.0;
+    bd->alpha = INT32_MAX;
+    bd->beta = INT32_MIN;
   }
 
   return bd;

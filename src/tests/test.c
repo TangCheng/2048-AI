@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../ai/tree.h"
 #include "../ai/evaluator.h"
 
@@ -102,29 +103,36 @@ int main(int argc, char *argv[])
     board_set_value(b, 3, 3, 1024);
     */
 
-    board_set_value(b, 0, 0, 8);
-    board_set_value(b, 0, 1, 0);
-    board_set_value(b, 0, 2, 0);
-    board_set_value(b, 0, 3, 0);
-    board_set_value(b, 1, 0, 4);
-    board_set_value(b, 1, 1, 0);
-    board_set_value(b, 1, 2, 0);
+    board_set_value(b, 0, 0, 2);
+    board_set_value(b, 0, 1, 4);
+    board_set_value(b, 0, 2, 64);
+    board_set_value(b, 0, 3, 4);
+    board_set_value(b, 1, 0, 8);
+    board_set_value(b, 1, 1, 128);
+    board_set_value(b, 1, 2, 32);
     board_set_value(b, 1, 3, 4);
-    board_set_value(b, 2, 0, 2);
-    board_set_value(b, 2, 1, 0);
-    board_set_value(b, 2, 2, 0);
-    board_set_value(b, 2, 3, 0);
-    board_set_value(b, 3, 0, 4);
-    board_set_value(b, 3, 1, 0);
-    board_set_value(b, 3, 2, 0);
-    board_set_value(b, 3, 3, 0);
+    board_set_value(b, 2, 0, 256);
+    board_set_value(b, 2, 1, 64);
+    board_set_value(b, 2, 2, 16);
+    board_set_value(b, 2, 3, 16);
+    board_set_value(b, 3, 0, 2);
+    board_set_value(b, 3, 1, 4);
+    board_set_value(b, 3, 2, 4);
+    board_set_value(b, 3, 3, 4);
 
-    evaluator_monotonicity(eval, b);
-    evaluator_smoothness(eval, b);
-    evaluator_empty(eval, b);
-    evaluator_max_value(eval, b);
-    evaluator_islands(eval, b);
-    evaluator_get_value(eval, b);
+    uint32 len = 0;
+    uint64 *pos_array = NULL;
+    board_get_empty(b, &pos_array, &len);
+    printf("empty count is %u\n", len);
+    free(pos_array);
+    printf("monotonicity is %d\n", evaluator_monotonicity(eval, b));
+    printf("smoothness is %d\n", evaluator_smoothness(eval, b));
+    printf("empty is %.13f\n", evaluator_empty(eval, b));
+    printf("max value is %u\n", evaluator_max_value(eval, b));
+    printf("islands is %u\n", evaluator_islands(eval, b));
+    printf("value is %.13f\n", evaluator_get_value(eval, b));
+
+    evaluator_destory(&eval);
     board_destory(&b);
   }
 

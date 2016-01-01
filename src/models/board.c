@@ -158,24 +158,22 @@ void board_get_empty(board *self, uint64 **array, uint32 *len)
   }
 }
 
-bool board_clone_data(board *self, board *dest)
+bool board_clone_data(board *self, board *mother)
 {
   bool ret = false;
 
-  if (self != NULL && dest != NULL)
+  if (self != NULL && mother != NULL)
   {
-    uint32 rows = board_get_rows(dest);
-    uint32 cols = board_get_cols(dest);
-    if (rows >= self->rows && cols >= self->cols)
+    uint32 rows = board_get_rows(mother);
+    uint32 cols = board_get_cols(mother);
+    if (rows <= self->rows && cols <= self->cols)
     {
       uint32 x = 0, y = 0;
-      uint32 val = 0;
       for (x = 0; x < self->cols; x++)
       {
         for (y = 0; y < self->rows; y++)
         {
-          val = board_get_value(self, x, y);
-          board_set_value(dest, x, y, val);
+          self->contents[y][x] = mother->contents[y][x];
         }
       }
       ret = true;

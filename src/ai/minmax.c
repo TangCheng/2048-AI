@@ -4,6 +4,7 @@
 #include "tree.h"
 #include "board_pool.h"
 #include "evaluator.h"
+#include "../views/output.h"
 
 typedef struct _minmax
 {
@@ -13,6 +14,8 @@ typedef struct _minmax
   calculator  *bc;
 } minmax;
 
+#define MIN(a, b)   (((a) <= (b)) ? (a) : (b))
+
 static bool minmax_change_tree_root(minmax *self, board *b,
   enum direction last_dir);
 static void minmax_growth_tree(minmax *self);
@@ -21,8 +24,8 @@ static void minmax_new_level_for_player(minmax *self, tree_node *node,
   board_data *bd);
 static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   board_data *bd);
-static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
-  uint32 positions, uint32 cutoffs);
+static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root);
+static void minmax_show_tree(minmax *self, tree_node *node);
 
 static void minmax_data_free_callback(void *owner, void *data)
 {
@@ -33,12 +36,14 @@ static void minmax_data_free_callback(void *owner, void *data)
   }
 }
 
-static bool minmax_data_compare_callback(void *data1, void *data2)
+static bool minmax_data_compare_callback(void *user_data, void *node_data)
 {
-  board_data *bd1 = (board_data *)data1;
-  board_data *bd2 = (board_data *)data2;
+  board_data *user_bd = (board_data *)user_data;
+  board_data *node_bd = (board_data *)node_data;
 
-  return board_is_equal(bd1->b, bd2->b) && (bd2->r == PLAYER_TURN)/*(bd1->dir == bd2->dir)*/;
+  return board_is_equal(node_bd->b, user_bd->b)
+    && (node_bd->r == PLAYER_TURN)
+    && (node_bd->dir == user_bd->dir);
 }
 
 bool minmax_create(minmax **self)
@@ -78,8 +83,9 @@ enum direction minmax_search(minmax *self, board *b, enum direction last_dir,
   uint32 depth)
 {
   enum direction best = BOTTOM_OF_DIRECTION;
-  double best_value = 0;
+  double best_value = 0.0;
   uint32 tree_depth = 0;
+  uint32 i = 0;
   tree_node *root = NULL;
 
   if (self != NULL && b != NULL && depth != 0)
@@ -87,21 +93,28 @@ enum direction minmax_search(minmax *self, board *b, enum direction last_dir,
     if (minmax_change_tree_root(self, b, last_dir) == true)
     {
       tree_depth = tree_get_depth(self->bt);
-      while (tree_depth <= depth)
+      if (depth > tree_depth)
       {
-        minmax_growth_tree(self);
-        tree_depth = tree_get_depth(self->bt);
+        for (i = 0; i < depth - tree_depth; i++)
+        {
+          minmax_growth_tree(self);
+          //LOG("tree depth is %u", tree_get_depth(self->bt));
+        }
       }
       root = tree_get_root(self->bt);
+      depth = MIN(depth, tree_get_depth(self->bt));
+      //LOG("search depth is %u", depth);
       if (root != NULL)
       {
-        best_value = minmax_search_engine(self, depth, root, 0, 0);
-        //LOG("best value is %d", best_value);
+        best_value = minmax_search_engine(self, depth - 1, root);
+        //LOG("*************** show the tree begin .***********************");
+        //minmax_show_tree(self, NULL);
+        //LOG("*************** show the tree end .***********************");
         tree_node *child_node = tree_get_child(self->bt, root);
         while (child_node != NULL)
         {
           board_data *bd = tree_get_data(self->bt, child_node);
-          LOG("bd value is %f, dir is %u", bd->value, bd->dir);
+          //LOG("bd value is %.13f, dir is %u", bd->value, bd->dir);
           if (bd->value == best_value)
           {
             best = bd->dir;
@@ -125,14 +138,14 @@ static bool minmax_change_tree_root(minmax *self, board *b,
   bd = board_pool_get(self->bp);
   if (bd != NULL)
   {
-    board_clone_data(b, bd->b);
+    board_clone_data(bd->b, b);
     tree_node *current_root = NULL;
     current_root = tree_get_root(self->bt);
     if (current_root == NULL)
     {
       bd->r = PLAYER_TURN;
       tree_insert(self->bt, NULL, (void *)bd);
-      LOG("change root from %p to %p", current_root, tree_get_root(self->bt));
+      //LOG("change root from %p to %p", current_root, tree_get_root(self->bt));
     }
     else
     {
@@ -143,17 +156,17 @@ static bool minmax_change_tree_root(minmax *self, board *b,
         if (node != current_root)
         {
           tree_set_new_root(self->bt, node);
-          LOG("change root from %p to %p", current_root, node);
+          //LOG("change root from %p to %p", current_root, node);
         }
         board_pool_put(self->bp, bd);
       }
       else
       {
-        LOG("could not find any node.");
+        //LOG("could not find any node.");
         bd->r = PLAYER_TURN;
         tree_delete(self->bt, current_root);
         tree_insert(self->bt, NULL, (void *)bd);
-        LOG("change root from %p to %p", current_root, tree_get_root(self->bt));
+        //LOG("change root from %p to %p", current_root, tree_get_root(self->bt));
       }
     }
     ret = true;
@@ -228,9 +241,11 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   uint32 len = 0;
   uint32 i = 0, j = 0;
   board_data *new_bd = NULL;
-  uint32 value[] = GAME_NUBMER_ELEMENTS;
-  uint32 smoothness = 0, islands = 0, worst_score = 0;
-  uint32 worst_pos = 0, worst_val = value[0];
+  uint32 values[] = GAME_NUBMER_ELEMENTS;
+  uint32 islands = 0;
+  int32 smoothness = 0, worst_score = INT32_MIN;
+  uint64 worst_pos = 0;
+  uint32 worst_val = values[0];
 
   board_get_empty(bd->b, &pos_array, &len);
   new_bd = board_pool_get(self->bp);
@@ -238,23 +253,23 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   {
     for (i = 0; i < len; i++)
     {
-      for (j = 0; j < ARRAY_SIZE(value); j++)
+      for (j = 0; j < ARRAY_SIZE(values); j++)
       {
-        board_clone_data(bd->b, new_bd->b);
-        board_set_value_by_pos(new_bd->b, pos_array[i], value[j]);
+        board_clone_data(new_bd->b, bd->b);
+        board_set_value_by_pos(new_bd->b, pos_array[i], values[j]);
         smoothness = evaluator_smoothness(self->be, new_bd->b);
         islands = evaluator_islands(self->be, new_bd->b);
-        if (worst_score < (-smoothness + islands))
+        if (worst_score < (int32)(-smoothness + islands))
         {
-          worst_score = -smoothness + islands;
+          worst_score = (int32)(-smoothness + islands);
           worst_pos = pos_array[i];
-          worst_val = value[j];
+          worst_val = values[j];
         }
       }
     }
     new_bd->r = PLAYER_TURN;
     new_bd->dir = bd->dir;
-    board_clone_data(bd->b, new_bd->b);
+    board_clone_data(new_bd->b, bd->b);
     board_set_value_by_pos(new_bd->b, worst_pos, worst_val);
     //new_bd->value = evaluator_get_value(self->be, new_bd->b);
     tree_insert(self->bt, node, (void *)new_bd);
@@ -262,11 +277,9 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   free(pos_array);
 }
 
-static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
-  uint32 positions, uint32 cutoffs)
+static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root)
 {
   double value = 0.0;
-  double score = 0.0;
   board_data *bd = NULL;
   tree_node *child_node = NULL;
 
@@ -275,8 +288,8 @@ static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
   {
     if (depth == 0)
     {
-      value = evaluator_get_value(self->be, bd->b);
-      return value;
+      bd->value = evaluator_get_value(self->be, bd->b);
+      return bd->value;
     }
     if (bd->r == PLAYER_TURN)
     {
@@ -289,26 +302,63 @@ static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root,
     child_node = tree_get_child(self->bt, root);
     while (child_node != NULL)
     {
-      score = minmax_search_engine(self, depth - 1, child_node, positions, cutoffs);
+      value = minmax_search_engine(self, depth - 1, child_node);
       if (bd->r == PLAYER_TURN)
       {
-        if (score > bd->value)
+        if (value > bd->value)
         {
-          bd->value = score;
-          value = bd->value;
+          bd->value = value;
         }
       }
       else
       {
-        if (score < bd->value)
+        if (value < bd->value)
         {
-          bd->value = score;
-          value = bd->value;
+          bd->value = value;
         }
       }
       child_node = tree_get_sibling(self->bt, child_node);
     }
+    value = bd->value;
   }
 
   return value;
+}
+
+static void minmax_show_tree(minmax *self, tree_node *node)
+{
+  cout *o;
+  cout_create(&o);
+  tree_node *child = NULL;
+  board_data *bd = NULL;
+
+  if (node == NULL)
+  {
+    child = tree_get_root(self->bt);
+  }
+  else
+  {
+    child = tree_get_child(self->bt, node);
+  }
+  while (child != NULL)
+  {
+    bd = tree_get_data(self->bt, child);
+    if (bd != NULL)
+    {
+      LOG("%p", child);
+      if (tree_get_parent(self->bt, child) != NULL)
+      {
+        LOG("parent is %p", tree_get_parent(self->bt, child));
+      }
+      LOG("node level is %u", tree_get_node_level(self->bt, child));
+      LOG("node degree is %u", tree_get_node_degree(self->bt, child));
+      LOG("node value is %.13f", bd->value);
+      cout_display_direction(o, bd->dir);
+      cout_display_board(o, bd->b);
+    }
+    minmax_show_tree(self, child);
+    child = tree_get_sibling(self->bt, child);
+  }
+
+  cout_destory(&o);
 }
