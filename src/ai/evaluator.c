@@ -311,8 +311,11 @@ double evaluator_empty(evaluator *self, board *b)
   uint64 *pos_array = NULL;
   uint32 empty_count = 0;
 
-  board_get_empty(b, &pos_array, &empty_count);
-  free(pos_array);
+  if (self != NULL && b != NULL)
+  {
+    board_get_empty(b, &pos_array, &empty_count);
+    free(pos_array);
+  }
 
   //LOG("empty is %f", log(empty_count));
   if (empty_count == 0)
@@ -329,14 +332,18 @@ uint32 evaluator_max_value(evaluator *self, board *b)
 {
   uint32 max = 0;
   uint32 x = 0, y = 0;
-  uint32 rows = board_get_rows(b);
-  uint32 cols = board_get_cols(b);
 
-  for (x = 0; x < cols; x++)
+  if (self != NULL && b != NULL)
   {
-    for (y = 0; y < rows; y++)
+    uint32 rows = board_get_rows(b);
+    uint32 cols = board_get_cols(b);
+
+    for (x = 0; x < cols; x++)
     {
-      max = MAX(max, board_get_value(b, x, y));
+      for (y = 0; y < rows; y++)
+      {
+        max = MAX(max, board_get_value(b, x, y));
+      }
     }
   }
   //LOG("max value is %u", (uint32)(log(max) / log(2)));
@@ -345,7 +352,23 @@ uint32 evaluator_max_value(evaluator *self, board *b)
 
 uint32 evaluator_sum(evaluator *self, board *b)
 {
-  return 0;
+  uint64 sum = 0;
+  uint32 x = 0, y = 0;
+
+  if (self != NULL && b != NULL)
+  {
+    uint32 rows = board_get_rows(b);
+    uint32 cols = board_get_cols(b);
+
+    for (x = 0; x < cols; x++)
+    {
+      for (y = 0; y < rows; y++)
+      {
+        sum += board_get_value(b, x, y);
+      }
+    }
+  }
+  return (uint32)(log(sum) / log(2));
 }
 
 static void evaluator_check_around(evaluator *self, board *b, uint32 x,
