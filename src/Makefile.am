@@ -29,6 +29,7 @@ bin_PROGRAMS = 2048
 	ai/tree.c \
 	ai/list.c \
 	ai/board_pool.c \
+	ai/expectimax.c \
 	main.c
 
 2048_LDFLAGS =

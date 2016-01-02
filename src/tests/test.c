@@ -70,11 +70,9 @@ int main(int argc, char *argv[])
     board_set_value(b, 3, 3, 4);
 
     uint32 len = 0;
-    uint64 *pos_array = NULL;
     cout_display_board(o, b);
-    board_get_empty(b, &pos_array, &len);
+    len = board_count_availables(b);
     printf("empty count is %u\n", len);
-    free(pos_array);
     printf("monotonicity is %d\n", evaluator_monotonicity(eval, b));
     printf("smoothness is %d\n", evaluator_smoothness(eval, b));
     printf("empty is %.13f\n", evaluator_empty(eval, b));

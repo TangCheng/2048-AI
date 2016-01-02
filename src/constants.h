@@ -12,6 +12,7 @@ typedef unsigned short        uint16;
 typedef unsigned int          uint32;
 typedef unsigned long long    uint64;
 typedef uint64                board_t;
+typedef uint16                row_t;
 
 #ifndef bool
 typedef enum boolean
@@ -23,14 +24,27 @@ typedef enum boolean
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
-//#define AUTO_PLAY
+#define AUTO_PLAY
 #define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
 #define MAX_SEARCH_DEPTH      15
 
-#define ROWS_OF_BOARD    4
-#define COLS_OF_BOARD    4
+#define AI_ENGINE                   minmax /* minmax or expectimax */
+#define _AI_ENGINE_CREATE(name, a)  name##_create(a)
+#define _AI_ENGINE_DESTORY(name, a) name##_destory(a)
+#define _AI_ENGINE_SEARCH(name, a, board, dir, depth) \
+  name##_search(a, board, dir, depth)
+#define AI_ENGINE_CREATE(name, a)  _AI_ENGINE_CREATE(name, a)
+#define AI_ENGINE_DESTORY(name, a) _AI_ENGINE_DESTORY(name, a)
+#define AI_ENGINE_SEARCH(name, a, board, dir, depth) \
+  _AI_ENGINE_SEARCH(name, a, board, dir, depth)
+
+#define ROWS_OF_BOARD     4
+#define COLS_OF_BOARD     4
+
+#define ROW_MASK          0xFFFFULL
+#define COL_MASK          0x000F000F000F000FULL
 
 #define GAME_INIT_NUMBER_COUNT  3
 #define GAME_INIT_NUMBER        2

@@ -3,11 +3,12 @@
 #include <sys/time.h>
 #include "ai.h"
 #include "minmax.h"
+#include "expectimax.h"
 
 typedef struct _ai
 {
   uint32            count;
-  minmax            *engine;
+  AI_ENGINE         *engine;
   uint32            thinking_duration;
   enum direction    last_dir;
 } ai;
@@ -29,7 +30,7 @@ bool ai_create(ai **self)
     a = (ai *)malloc(sizeof(ai));
     if (a != NULL)
     {
-      minmax_create(&a->engine);
+      AI_ENGINE_CREATE(AI_ENGINE, &a->engine);
       a->count = 1;
       a->thinking_duration = 0;
       a->last_dir = BOTTOM_OF_DIRECTION;
@@ -49,7 +50,7 @@ void ai_destory(ai **self)
     a->count--;
     if (a->count == 0)
     {
-      minmax_destory(&a->engine);
+      AI_ENGINE_DESTORY(AI_ENGINE, &a->engine);
       free(a);
       a = NULL;
     }
@@ -78,7 +79,7 @@ enum direction ai_get(ai *self, board *b)
       gettimeofday(&now, NULL);
       start = now.tv_sec * 1000 + now.tv_usec / 1000;
       do {
-        best = minmax_search(self->engine, b, self->last_dir, depth);
+        best = AI_ENGINE_SEARCH(AI_ENGINE, self->engine, b, self->last_dir, depth);
         if (best == BOTTOM_OF_DIRECTION)
         {
           break;
@@ -94,7 +95,7 @@ enum direction ai_get(ai *self, board *b)
     }
     else
     {
-      best = minmax_search(self->engine, b, self->last_dir, MAX_SEARCH_DEPTH);
+      best = AI_ENGINE_SEARCH(AI_ENGINE, self->engine, b, self->last_dir, MAX_SEARCH_DEPTH);
     }
     self->last_dir = best;
   }

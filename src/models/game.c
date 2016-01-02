@@ -45,7 +45,8 @@ static void game_init(game *self)
     val_array[0] = val_array[0];
     val = GAME_INIT_NUMBER;
 #endif
-    board_get_empty(self->b[self->current_board], &pos_array, &pos_array_len);
+    pos_array_len = board_count_availables(self->b[self->current_board]);
+    pos_array = board_get_availables(self->b[self->current_board]);
     pos = random_generator_select(self->rg, pos_array, pos_array_len);
     free(pos_array);
     board_set_value_by_pos(self->b[self->current_board], pos, val);
@@ -180,7 +181,8 @@ static void game_new_step(game *self)
   uint32 pos_array_len = 0;
   uint64 pos = 0;
 
-  board_get_empty(self->b[self->current_board], &pos_array, &pos_array_len);
+  pos_array_len = board_count_availables(self->b[self->current_board]);
+  pos_array = board_get_availables(self->b[self->current_board]);
   if (pos_array_len > 0)
   {
     val = (uint32)random_generator_select(self->rg, val_array, ARRAY_SIZE(val_array));
@@ -193,12 +195,10 @@ static void game_new_step(game *self)
 static bool game_is_over(game *self)
 {
   bool ret = true;
-  uint64 *pos_array = NULL;
   uint32 pos_array_len = 0;
   uint8 current = self->current_board;
 
-  board_get_empty(self->b[self->current_board], &pos_array, &pos_array_len);
-  free(pos_array);
+  pos_array_len = board_count_availables(self->b[self->current_board]);
   if (pos_array_len == 0)
   {
     ret &= !calculator_check_direction(self->calc, self->b[current], UP);

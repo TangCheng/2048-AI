@@ -308,13 +308,11 @@ int32 evaluator_monotonicity(evaluator *self, board *b)
 
 double evaluator_empty(evaluator *self, board *b)
 {
-  uint64 *pos_array = NULL;
   uint32 empty_count = 0;
 
   if (self != NULL && b != NULL)
   {
-    board_get_empty(b, &pos_array, &empty_count);
-    free(pos_array);
+    empty_count = board_count_availables(b);
   }
 
   //LOG("empty is %f", log(empty_count));

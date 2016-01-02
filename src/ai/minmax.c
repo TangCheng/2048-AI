@@ -248,9 +248,10 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
   uint64 worst_pos = 0;
   uint32 worst_val = values[0];
 
-  board_get_empty(bd->b, &pos_array, &len);
+  len = board_count_availables(bd->b);
+  pos_array = board_get_availables(bd->b);
   new_bd = board_pool_get(self->bp);
-  if (new_bd != NULL)
+  if (new_bd != NULL && pos_array != NULL)
   {
     for (i = 0; i < len; i++)
     {

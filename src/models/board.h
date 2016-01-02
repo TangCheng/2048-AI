@@ -12,7 +12,8 @@ uint32 board_get_cols(board *self);
 void board_set_value(board *self, uint32 x, uint32 y, uint32 val);
 void board_set_value_by_pos(board *self, uint64 pos, uint32 val);
 uint32 board_get_value(board *self, uint32 x, uint32 y);
-void board_get_empty(board *self, uint64 **array, uint32 *len);
+uint32 board_count_availables(board *self);
+uint64 *board_get_availables(board *self);
 bool board_clone_data(board *self, board *mother);
 bool board_is_equal(board *self, board *other);
 
