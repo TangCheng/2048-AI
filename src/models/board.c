@@ -11,7 +11,6 @@ typedef struct _board
   board_t contents;
 } board;
 
-#define ELEMENT_BITS        (sizeof(board_t) * 8 / (ROWS_OF_BOARD * COLS_OF_BOARD))
 #define OFFSET_BY_X_Y(x, y) ((y) * ELEMENT_BITS * COLS_OF_BOARD + (x) * ELEMENT_BITS)
 
 static inline uint8 board_get_power_val(board *self, uint32 x, uint32 y);
@@ -94,6 +93,14 @@ void board_set_value_by_pos(board *self, uint64 pos, uint32 val)
   }
 }
 
+void board_set_contents(board *self, board_t contents)
+{
+  if (self != NULL)
+  {
+    self->contents = contents;
+  }
+}
+
 uint32 board_get_value(board *self, uint32 x, uint32 y)
 {
   uint32 value = 0;
@@ -109,6 +116,18 @@ uint32 board_get_value(board *self, uint32 x, uint32 y)
   }
 
   return value;
+}
+
+board_t board_get_contents(board *self)
+{
+  board_t ret = 0ULL;
+
+  if (self != NULL)
+  {
+    ret = self->contents;
+  }
+
+  return ret;
 }
 
 // Count the number of empty positions (= zero nibbles) in a board.

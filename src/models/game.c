@@ -20,6 +20,7 @@ typedef struct _game
   cout              *out;
   random_generator  *rg;
   calculator        *calc;
+  uint64            score_penalty;
 } game;
 
 static void game_over(game *self);
@@ -37,6 +38,7 @@ static void game_init(game *self)
   int i = 0;
 
   self->current_board = 0;
+  self->score_penalty = 0;
   for (i = 0; i < GAME_INIT_NUMBER_COUNT; i++)
   {
 #if (GAME_INIT_NUMBER == 0)
@@ -151,9 +153,10 @@ void game_start(game *self)
       self->current_board = next;
       next = current;
       current = self->current_board;
+      cout_display_score(self->out,
+        calculator_get_score(self->calc) - self->score_penalty);
       game_new_step(self);
       cout_display_board(self->out, self->b[current]);
-      cout_display_score(self->out, calculator_get_score(self->calc));
       if (game_is_over(self) == true)
       {
         game_over(self);
@@ -188,6 +191,10 @@ static void game_new_step(game *self)
     val = (uint32)random_generator_select(self->rg, val_array, ARRAY_SIZE(val_array));
     pos = random_generator_select(self->rg, pos_array, pos_array_len);
     board_set_value_by_pos(self->b[self->current_board], pos, val);
+    if (val == val_array[1])
+    {
+      self->score_penalty += val;
+    }
   }
   free(pos_array);
 }

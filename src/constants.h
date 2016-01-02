@@ -25,7 +25,7 @@ typedef enum boolean
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
 #define AUTO_PLAY
-#define THINKING_BY_DEPTH
+//#define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
 #define MAX_SEARCH_DEPTH      15
@@ -45,6 +45,10 @@ typedef enum boolean
 
 #define ROW_MASK          0xFFFFULL
 #define COL_MASK          0x000F000F000F000FULL
+
+#define ELEMENT_BITS      (sizeof(board_t) * 8 / (ROWS_OF_BOARD * COLS_OF_BOARD))
+#define TRANSPOSE_TABLE_SIZE    (1L << (ELEMENT_BITS * COLS_OF_BOARD))
+#define SCORE_TABLE_SIZE        TRANSPOSE_TABLE_SIZE
 
 #define GAME_INIT_NUMBER_COUNT  3
 #define GAME_INIT_NUMBER        2
