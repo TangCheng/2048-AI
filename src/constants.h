@@ -11,6 +11,7 @@ typedef unsigned char         uint8;
 typedef unsigned short        uint16;
 typedef unsigned int          uint32;
 typedef unsigned long long    uint64;
+typedef uint64                board_t;
 
 #ifndef bool
 typedef enum boolean
@@ -22,7 +23,7 @@ typedef enum boolean
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
-#define AUTO_PLAY
+//#define AUTO_PLAY
 #define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3

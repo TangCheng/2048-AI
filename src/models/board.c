@@ -1,68 +1,41 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "board.h"
 
 typedef struct _board
 {
-  uint32 rows;
-  uint32 cols;
-  uint32 **contents;
+  uint32  rows;
+  uint32  cols;
+  board_t contents;
 } board;
+
+#define ELEMENT_BITS        (sizeof(board_t) * 8 / (ROWS_OF_BOARD * COLS_OF_BOARD))
+#define OFFSET_BY_X_Y(x, y) ((y) * ELEMENT_BITS * COLS_OF_BOARD + (x) * ELEMENT_BITS)
+
+static inline uint8 board_get_power_val(board *self, uint32 x, uint32 y);
+static inline void board_set_power_val(board *self, uint32 x, uint32 y,
+  uint8 power_val);
 
 bool board_create(board **self, uint32 rows, uint32 cols)
 {
   bool ret = false;
-  uint32 *buffer = NULL;
 
   *self = (board *)malloc(sizeof(board));
-  if (*self == NULL)
+  if (*self != NULL)
   {
-    return ret;
+    (*self)->rows = rows;
+    (*self)->cols = cols;
+    (*self)->contents = 0LL;
+    ret = true;
   }
-
-  (*self)->rows = rows;
-  (*self)->cols = cols;
-
-  (*self)->contents = (uint32 **)malloc(sizeof(uint32 *) * rows);
-  if ((*self)->contents == NULL)
-  {
-    board_destory(self);
-    return ret;
-  }
-
-  buffer = (uint32 *)malloc(sizeof(uint32) * rows * cols);
-  if (buffer == NULL)
-  {
-    board_destory(self);
-    return ret;
-  }
-
-  memset((char *)buffer, 0x00, sizeof(uint32) * rows * cols);
-  int i = 0;
-  for (i = 0; i < rows; i++)
-  {
-    (*self)->contents[i] = buffer + i * cols;
-  }
-  ret = true;
 
   return ret;
 }
 
 void board_destory(board **self)
 {
-  if ((*self)->contents[0] != NULL)
-  {
-    free((*self)->contents[0]);
-    (*self)->contents[0] = NULL;
-  }
-
-  if ((*self)->contents != NULL)
-  {
-    free((*self)->contents);
-    (*self)->contents = NULL;
-  }
-
   if (*self != NULL)
   {
     free(*self);
@@ -96,11 +69,17 @@ uint32 board_get_cols(board *self)
 
 void board_set_value(board *self, uint32 x, uint32 y, uint32 val)
 {
+  uint8 power_val = 0;
+
   if (self != NULL)
   {
     if (x < self->cols && y < self->rows)
     {
-      self->contents[y][x] = val;
+      if ((val & (val - 1)) == 0)
+      {
+        power_val = (uint8)log2(val);
+        board_set_power_val(self, x, y, power_val);
+      }
     }
   }
 }
@@ -111,29 +90,32 @@ void board_set_value_by_pos(board *self, uint64 pos, uint32 val)
   {
     uint32 x = pos >> 32;
     uint32 y = pos & 0x00000000FFFFFFFF;
-    if (x < self->cols && y < self->rows)
-    {
-      self->contents[y][x] = val;
-    }
+    board_set_value(self, x, y, val);
   }
 }
 
 uint32 board_get_value(board *self, uint32 x, uint32 y)
 {
+  uint32 value = 0;
+  uint8 power_val = 0;
+
   if (self != NULL)
   {
     if (x < self->cols && y < self->rows)
     {
-      return self->contents[y][x];
+      power_val = board_get_power_val(self, x, y);
+      value = (power_val == 0) ? 0 : (1 << power_val);
     }
   }
 
-  return 0;
+  return value;
 }
 
 void board_get_empty(board *self, uint64 **array, uint32 *len)
 {
   uint32 x = 0, y = 0;
+  uint8 power_val = 0;
+
   if (self != NULL)
   {
     *array = (uint64 *)malloc(sizeof(uint64) * self->rows * self->cols);
@@ -145,7 +127,8 @@ void board_get_empty(board *self, uint64 **array, uint32 *len)
       {
         for (y = 0; y < self->rows; y++)
         {
-          if (self->contents[y][x] == 0)
+          power_val = board_get_power_val(self, x, y);
+          if (power_val == 0)
           {
             (*array)[*len] = x;
             (*array)[*len] <<= 32;
@@ -164,20 +147,8 @@ bool board_clone_data(board *self, board *mother)
 
   if (self != NULL && mother != NULL)
   {
-    uint32 rows = board_get_rows(mother);
-    uint32 cols = board_get_cols(mother);
-    if (rows <= self->rows && cols <= self->cols)
-    {
-      uint32 x = 0, y = 0;
-      for (x = 0; x < self->cols; x++)
-      {
-        for (y = 0; y < self->rows; y++)
-        {
-          self->contents[y][x] = mother->contents[y][x];
-        }
-      }
-      ret = true;
-    }
+    self->contents = mother->contents;
+    ret = true;
   }
 
   return ret;
@@ -189,24 +160,28 @@ bool board_is_equal(board *self, board *other)
 
   if (self != NULL && other != NULL)
   {
-    uint32 rows = board_get_rows(other);
-    uint32 cols = board_get_cols(other);
-    if (rows == self->rows && cols == self->cols)
-    {
-      uint32 x = 0, y = 0;
-      uint32 val1 = 0, val2 = 0;
-      ret = true;
-      for (x = 0; x < self->cols; x++)
-      {
-        for (y = 0; y < self->rows; y++)
-        {
-          val1 = board_get_value(self, x, y);
-          val2 = board_get_value(other, x, y);
-          ret &= (val1 == val2);
-        }
-      }
-    }
+      ret = (self->contents == other->contents);
   }
 
   return ret;
+}
+
+static inline uint8 board_get_power_val(board *self, uint32 x, uint32 y)
+{
+  return (self->contents >> OFFSET_BY_X_Y(x, y)) & 0x0F;
+}
+
+static inline void board_set_power_val(board *self, uint32 x, uint32 y,
+  uint8 power_val)
+{
+  uint64 temp = 0LL;
+
+  temp = 0x0FLL << OFFSET_BY_X_Y(x, y);
+  temp = ~temp;
+
+  self->contents &= temp;
+
+  temp = power_val;
+  temp <<= OFFSET_BY_X_Y(x, y);
+  self->contents |= temp;
 }
