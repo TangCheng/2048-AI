@@ -11,6 +11,20 @@ typedef unsigned char         uint8;
 typedef unsigned short        uint16;
 typedef unsigned int          uint32;
 typedef unsigned long long    uint64;
+
+/* The fundamental trick: the 4x4 board is represented as a 64-bit word,
+ * with each board square packed into a single 4-bit nibble.
+ *
+ * The maximum possible board value that can be supported is 32768 (2^15), but
+ * this is a minor limitation as achieving 65536 is highly unlikely under normal
+ * circumstances.
+ *
+ * The space and computation savings from using this representation should be
+ * significant.
+ *
+ * The nibble shift can be computed as (r,c) -> shift (4*r + c). That is, (0,0)
+ * is the LSB.
+ */
 typedef uint64                board_t;
 typedef uint16                row_t;
 
@@ -25,7 +39,7 @@ typedef enum boolean
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
 #define AUTO_PLAY
-//#define THINKING_BY_DEPTH
+#define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
 #define MAX_SEARCH_DEPTH      15

@@ -26,8 +26,9 @@ bin_PROGRAMS = 2048
 	ai/ai.c \
 	ai/evaluator.c \
 	ai/minmax.c \
-	ai/tree.c \
-	ai/list.c \
+	ai/utils/tree.c \
+	ai/utils/list.c \
+	ai/utils/hash.c \
 	ai/board_pool.c \
 	ai/expectimax.c \
 	main.c

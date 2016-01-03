@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "minmax.h"
 #include "../models/calculator.h"
-#include "tree.h"
+#include "utils/tree.h"
 #include "board_pool.h"
 #include "evaluator.h"
 #include "../views/output.h"

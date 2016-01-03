@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../ai/tree.h"
+#include "../ai/utils/tree.h"
 #include "../ai/evaluator.h"
 #include "../views/output.h"
 

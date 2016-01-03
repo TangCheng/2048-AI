@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "board_pool.h"
-#include "list.h"
+#include "utils/list.h"
 
 typedef struct _board_pool{
   list *board_list;

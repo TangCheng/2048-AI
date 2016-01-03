@@ -18,5 +18,5 @@ bin_PROGRAMS = 2048_test
 
 2048_test_LDFLAGS =
 
-2048_test_LDADD = ../ai/list.o ../ai/tree.o ../ai/evaluator.o \
+2048_test_LDADD = ../ai/utils/list.o ../ai/utils/tree.o ../ai/evaluator.o \
 ../models/board.o ../views/output.o
