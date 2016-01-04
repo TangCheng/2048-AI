@@ -44,15 +44,19 @@ typedef enum boolean
 #define MIN_SEARCH_DEPTH      3
 #define MAX_SEARCH_DEPTH      15
 
-#define AI_ENGINE                   minmax /* minmax or expectimax */
-#define _AI_ENGINE_CREATE(name, a)  name##_create(a)
-#define _AI_ENGINE_DESTORY(name, a) name##_destory(a)
-#define _AI_ENGINE_SEARCH(name, a, board, dir, depth) \
+#define AI_ENGINE                    expectimax /* minmax or expectimax */
+#define __AI_ENGINE_CREATE(name, a)  name##_create(a)
+#define __AI_ENGINE_DESTORY(name, a) name##_destory(a)
+#define __AI_ENGINE_SEARCH(name, a, board, dir, depth) \
   name##_search(a, board, dir, depth)
-#define AI_ENGINE_CREATE(name, a)  _AI_ENGINE_CREATE(name, a)
-#define AI_ENGINE_DESTORY(name, a) _AI_ENGINE_DESTORY(name, a)
-#define AI_ENGINE_SEARCH(name, a, board, dir, depth) \
-  _AI_ENGINE_SEARCH(name, a, board, dir, depth)
+#define _AI_ENGINE_CREATE(name, a)   __AI_ENGINE_CREATE(name, a)
+#define _AI_ENGINE_DESTORY(name, a)  __AI_ENGINE_DESTORY(name, a)
+#define _AI_ENGINE_SEARCH(name, a, board, dir, depth) \
+  __AI_ENGINE_SEARCH(name, a, board, dir, depth)
+#define AI_ENGINE_CREATE(a)          _AI_ENGINE_CREATE(AI_ENGINE, a)
+#define AI_ENGINE_DESTORY(a)         _AI_ENGINE_DESTORY(AI_ENGINE, a)
+#define AI_ENGINE_SEARCH(a, board, dir, depth) \
+  _AI_ENGINE_SEARCH(AI_ENGINE, a, board, dir, depth)
 
 #define ROWS_OF_BOARD     4
 #define COLS_OF_BOARD     4
@@ -83,5 +87,33 @@ enum round
   COMPUTER_TURN         = 1,
   BOTTOM_OF_ROUND
 };
+
+// Transpose rows/columns in a board:
+//   0123       048c
+//   4567  -->  159d
+//   89ab       26ae
+//   cdef       37bf
+static inline board_t transpose(board_t x)
+{
+    board_t a1 = x & 0xF0F00F0FF0F00F0FULL;
+    board_t a2 = x & 0x0000F0F00000F0F0ULL;
+    board_t a3 = x & 0x0F0F00000F0F0000ULL;
+    board_t a = a1 | (a2 << 12) | (a3 >> 12);
+    board_t b1 = a & 0xFF00FF0000FF00FFULL;
+    board_t b2 = a & 0x00FF00FF00000000ULL;
+    board_t b3 = a & 0x00000000FF00FF00ULL;
+    return b1 | (b2 >> 24) | (b3 << 24);
+}
+
+static inline board_t unpack_col(row_t row)
+{
+  board_t tmp = row;
+  return (tmp | (tmp << 12ULL) | (tmp << 24ULL) | (tmp << 36ULL)) & COL_MASK;
+}
+
+static inline row_t reverse_row(row_t row)
+{
+  return (row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12);
+}
 
 #endif /* __CONSTANTS_H__ */

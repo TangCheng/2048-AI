@@ -220,6 +220,29 @@ bool board_is_equal(board *self, board *other)
   return ret;
 }
 
+uint32 board_count_distinct_tiles(board *self)
+{
+  uint32 count = 0;
+  uint16 bitset = 0;
+  board_t contents = 0ULL;
+
+  if (self != NULL) {
+    contents = self->contents;
+    while (contents) {
+      bitset |= 1 << (contents & 0xf);
+      contents >>= 4;
+    }
+    // Don't count empty tiles.
+    bitset >>= 1;
+    while (bitset) {
+      bitset &= bitset - 1;
+      count++;
+    }
+  }
+
+  return count;
+}
+
 static inline uint8 board_get_power_val(board *self, uint32 x, uint32 y)
 {
   return (self->contents >> OFFSET_BY_X_Y(x, y)) & 0x0F;

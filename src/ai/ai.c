@@ -30,7 +30,7 @@ bool ai_create(ai **self)
     a = (ai *)malloc(sizeof(ai));
     if (a != NULL)
     {
-      AI_ENGINE_CREATE(AI_ENGINE, &a->engine);
+      AI_ENGINE_CREATE(&a->engine);
       a->count = 1;
       a->thinking_duration = 0;
       a->last_dir = BOTTOM_OF_DIRECTION;
@@ -50,7 +50,7 @@ void ai_destory(ai **self)
     a->count--;
     if (a->count == 0)
     {
-      AI_ENGINE_DESTORY(AI_ENGINE, &a->engine);
+      AI_ENGINE_DESTORY(&a->engine);
       free(a);
       a = NULL;
     }
@@ -68,7 +68,7 @@ void ai_set_thinking_duration(ai *self, uint32 duration)
 enum direction ai_get(ai *self, board *b)
 {
   enum direction best = BOTTOM_OF_DIRECTION;
-  uint32 depth = 3;
+  uint32 depth = MIN_SEARCH_DEPTH;
   struct timeval now;
   uint64 start = 0, end = 0;
 
@@ -79,7 +79,7 @@ enum direction ai_get(ai *self, board *b)
       gettimeofday(&now, NULL);
       start = now.tv_sec * 1000 + now.tv_usec / 1000;
       do {
-        best = AI_ENGINE_SEARCH(AI_ENGINE, self->engine, b, self->last_dir, depth);
+        best = AI_ENGINE_SEARCH(self->engine, b, self->last_dir, depth);
         if (best == BOTTOM_OF_DIRECTION)
         {
           break;
@@ -95,7 +95,8 @@ enum direction ai_get(ai *self, board *b)
     }
     else
     {
-      best = AI_ENGINE_SEARCH(AI_ENGINE, self->engine, b, self->last_dir, MAX_SEARCH_DEPTH);
+      depth = MIN_SEARCH_DEPTH;
+      best = AI_ENGINE_SEARCH(self->engine, b, self->last_dir, depth);
     }
     self->last_dir = best;
   }

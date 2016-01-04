@@ -57,11 +57,13 @@ bool minmax_create(minmax **self)
     {
       tree_set_data_free_callback((*self)->bt, *self, minmax_data_free_callback);
       tree_set_data_compare_callback((*self)->bt, minmax_data_compare_callback);
+      // do NOTHING, just remove warning with compiler.
+      minmax_show_tree(*self, NULL);
+      ret = true;
     }
-    board_pool_create(&(*self)->bp);
-    evaluator_create(&(*self)->be);
-    calculator_create(&(*self)->bc);
-    ret = true;
+    ret &= board_pool_create(&(*self)->bp);
+    ret &= evaluator_create(&(*self)->be);
+    ret &= calculator_create(&(*self)->bc);
   }
 
   return ret;

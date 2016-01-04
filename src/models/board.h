@@ -18,5 +18,6 @@ uint32 board_count_availables(board *self);
 uint64 *board_get_availables(board *self);
 bool board_clone_data(board *self, board *mother);
 bool board_is_equal(board *self, board *other);
+uint32 board_count_distinct_tiles(board *self);
 
 #endif /* __BOARD_H__ */

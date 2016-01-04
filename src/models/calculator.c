@@ -100,34 +100,6 @@ uint64 calculator_get_score(calculator *self)
   return ret;
 }
 
-// Transpose rows/columns in a board:
-//   0123       048c
-//   4567  -->  159d
-//   89ab       26ae
-//   cdef       37bf
-static inline board_t transpose(board_t x)
-{
-    board_t a1 = x & 0xF0F00F0FF0F00F0FULL;
-    board_t a2 = x & 0x0000F0F00000F0F0ULL;
-    board_t a3 = x & 0x0F0F00000F0F0000ULL;
-    board_t a = a1 | (a2 << 12) | (a3 >> 12);
-    board_t b1 = a & 0xFF00FF0000FF00FFULL;
-    board_t b2 = a & 0x00FF00FF00000000ULL;
-    board_t b3 = a & 0x00000000FF00FF00ULL;
-    return b1 | (b2 >> 24) | (b3 << 24);
-}
-
-static inline board_t unpack_col(row_t row)
-{
-  board_t tmp = row;
-  return (tmp | (tmp << 12ULL) | (tmp << 24ULL) | (tmp << 36ULL)) & COL_MASK;
-}
-
-static inline row_t reverse_row(row_t row)
-{
-  return (row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12);
-}
-
 static void calculator_init_tables(calculator *self)
 {
   uint32 row = 0;
