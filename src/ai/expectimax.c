@@ -3,11 +3,14 @@
 #include "expectimax.h"
 #include "board_pool.h"
 #include "../models/calculator.h"
+#include "utils/hash.h"
 
 typedef struct _expectimax
 {
   board_pool    *bp;
   calculator    *bc;
+  hash          *depth_hash;
+  hash          *heur_hash;
   uint32        depth_limit;
   uint32        current_depth;
   uint32        max_depth;
@@ -33,8 +36,8 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
   float cprob);
 static float expectimax_score_move_node(expectimax *self, board *b,
   float cprob);
-static float expectimax_score_heur_board(expectimax *self, board *b);
-static float expectimax_score_helper(expectimax *self, board_t contents,
+static inline float expectimax_score_heur_board(expectimax *self, board *b);
+static inline float expectimax_score_helper(expectimax *self, board_t contents,
   const float *table);
 
 bool expectimax_create(expectimax **self)
@@ -48,6 +51,7 @@ bool expectimax_create(expectimax **self)
     calculator_create(&(*self)->bc);
     (*self)->depth_limit = 0;
     (*self)->current_depth = 0;
+    (*self)->max_depth = 0;
     expectimax_init_table(*self);
     ret = true;
   }
@@ -84,7 +88,7 @@ enum direction expectimax_search(expectimax *self, board *b,
       }
     }
   }
-
+  //LOG("search depth is %u", self->max_depth);
   return best_dir;
 }
 
@@ -107,6 +111,11 @@ static void expectimax_init_table(expectimax *self)
       line[i] = (row >> i * ELEMENT_BITS) & 0x0F;
       //LOG("line[%u] is 0x%.2x", i, line[i]);
     };
+    empty = 0;
+    merges = 0;
+    sum = 0.0f;
+    prev = 0;
+    counter = 0;
     for (i = 0; i < COLS_OF_BOARD; i++) {
       rank = line[i];
       sum += pow(rank, SCORE_SUM_POWER);
@@ -128,13 +137,13 @@ static void expectimax_init_table(expectimax *self)
 
     monotonicity_left = 0;
     monotonicity_right = 0;
-    for (i = 1; i < 4; i++) {
-        if (line[i-1] > line[i]) {
-            monotonicity_left += pow(line[i-1], SCORE_MONOTONICITY_POWER)
+    for (i = 1; i < COLS_OF_BOARD; i++) {
+        if (line[i - 1] > line[i]) {
+            monotonicity_left += pow(line[i - 1], SCORE_MONOTONICITY_POWER)
               - pow(line[i], SCORE_MONOTONICITY_POWER);
         } else {
             monotonicity_right += pow(line[i], SCORE_MONOTONICITY_POWER)
-              - pow(line[i-1], SCORE_MONOTONICITY_POWER);
+              - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
         }
     }
 
@@ -153,6 +162,10 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   board_data *new_bd = NULL;
 
   self->depth_limit = MAX(depth, board_count_distinct_tiles(b) - 2);
+  self->current_depth = 0;
+  self->max_depth = 0;
+  hash_create(&self->depth_hash, 65535, long, long);
+  hash_create(&self->heur_hash, 65535, long, float);
   new_bd = board_pool_get(self->bp);
   if (new_bd != NULL) {
     if (calculator_move(self->bc, b, new_bd->b, dir)) {
@@ -160,7 +173,8 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
     }
     board_pool_put(self->bp, new_bd);
   }
-
+  hash_destory(&self->heur_hash);
+  hash_destory(&self->depth_hash);
   return res;
 }
 
@@ -177,27 +191,27 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
   uint32 i = 0, j = 0;
   uint32 val_array[] = GAME_NUBMER_ELEMENTS;
   float res = 0.0f;
+  board_t contents = 0ULL;
 
   if (cprob < CPROB_THRESH_BASE || self->current_depth >= self->depth_limit) {
       self->max_depth = MAX(self->current_depth, self->max_depth);
       return expectimax_score_heur_board(self, b);
   }
+  contents = board_get_contents(b);
   if (self->current_depth < MAX_SEARCH_DEPTH) {
-      //const trans_table_t::iterator &i = state.trans_table.find(board);
-      //if (i != state.trans_table.end()) {
-          //trans_table_entry_t entry = i->second;
-          /*
-          return heuristic from transposition table only if it means that
-          the node will have been evaluated to a minimum depth of state.depth_limit.
-          This will result in slightly fewer cache hits, but should not impact the
-          strength of the ai negatively.
-          */
-          //if(entry.depth <= state.curdepth)
-          //{
-              //state.cachehits++;
-              //return entry.heuristic;
-          //}
-      //}
+    /*
+    return heuristic from transposition table only if it means that
+    the node will have been evaluated to a minimum depth of state.depth_limit.
+    This will result in slightly fewer cache hits, but should not impact the
+    strength of the ai negatively.
+    */
+    long depth = 0;
+    if (hash_find(self->depth_hash, contents, &depth) == true) {
+      if (depth <= self->current_depth) {
+        hash_find(self->heur_hash, contents, &res);
+        return res;
+      }
+    }
   }
 
   availables_count = board_count_availables(b);
@@ -220,8 +234,8 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
   res = res / availables_count;
 
   if (self->current_depth < MAX_SEARCH_DEPTH) {
-      //trans_table_entry_t entry = {static_cast<uint8_t>(state.curdepth), res};
-      //state.trans_table[board] = entry;
+    hash_add(self->depth_hash, contents, self->current_depth);
+    hash_add(self->heur_hash, contents, res);
   }
 
   return res;
@@ -250,7 +264,7 @@ static float expectimax_score_move_node(expectimax *self, board *b,
   return best;
 }
 
-static float expectimax_score_heur_board(expectimax *self, board *b)
+static inline float expectimax_score_heur_board(expectimax *self, board *b)
 {
   float ret = 0.0f;
   board_t contents = 0ULL;
@@ -263,7 +277,7 @@ static float expectimax_score_heur_board(expectimax *self, board *b)
   return ret;
 }
 
-static float expectimax_score_helper(expectimax *self, board_t contents,
+static inline float expectimax_score_helper(expectimax *self, board_t contents,
   const float *table)
 {
   float ret = 0.0f;

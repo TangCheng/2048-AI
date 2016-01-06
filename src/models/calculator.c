@@ -13,10 +13,10 @@ typedef struct _calculator
 } calculator;
 
 static void calculator_init_tables(calculator *self);
-static bool calculator_move_up(calculator *self, board *c, board *n, bool only_check);
-static bool calculator_move_down(calculator *self, board *c, board *n, bool only_check);
-static bool calculator_move_left(calculator *self, board *c, board *n, bool only_check);
-static bool calculator_move_right(calculator *self, board *c, board *n, bool only_check);
+static inline bool calculator_move_up(calculator *self, board *c, board *n);
+static inline bool calculator_move_down(calculator *self, board *c, board *n);
+static inline bool calculator_move_left(calculator *self, board *c, board *n);
+static inline bool calculator_move_right(calculator *self, board *c, board *n);
 
 bool calculator_create(calculator **self)
 {
@@ -63,16 +63,16 @@ bool calculator_move(calculator *self, board *current, board *next, enum directi
     switch (dir)
     {
       case UP:
-        ret = calculator_move_up(self, current, next, false);
+        ret = calculator_move_up(self, current, next);
         break;
       case DOWN:
-        ret = calculator_move_down(self, current, next, false);
+        ret = calculator_move_down(self, current, next);
         break;
       case LEFT:
-        ret = calculator_move_left(self, current, next, false);
+        ret = calculator_move_left(self, current, next);
         break;
       case RIGHT:
-        ret = calculator_move_right(self, current, next, false);
+        ret = calculator_move_right(self, current, next);
         break;
       default:
         break;
@@ -178,7 +178,7 @@ static void calculator_init_tables(calculator *self)
   }
 }
 
-static bool calculator_move_up(calculator *self, board *c, board *n, bool only_check)
+static inline bool calculator_move_up(calculator *self, board *c, board *n)
 {
   bool ret = false;
   board_t origin = board_get_contents(c);
@@ -193,7 +193,7 @@ static bool calculator_move_up(calculator *self, board *c, board *n, bool only_c
   return ret;
 }
 
-static bool calculator_move_down(calculator *self, board *c, board *n, bool only_check)
+static inline bool calculator_move_down(calculator *self, board *c, board *n)
 {
   bool ret = false;
   board_t origin = board_get_contents(c);
@@ -208,7 +208,7 @@ static bool calculator_move_down(calculator *self, board *c, board *n, bool only
   return ret;
 }
 
-static bool calculator_move_left(calculator *self, board *c, board *n, bool only_check)
+static inline bool calculator_move_left(calculator *self, board *c, board *n)
 {
   bool ret = false;
   board_t origin = board_get_contents(c);
@@ -223,7 +223,7 @@ static bool calculator_move_left(calculator *self, board *c, board *n, bool only
   return ret;
 }
 
-static bool calculator_move_right(calculator *self, board *c, board *n, bool only_check)
+static inline bool calculator_move_right(calculator *self, board *c, board *n)
 {
   bool ret = false;
   board_t origin = board_get_contents(c);
