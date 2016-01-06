@@ -21,4 +21,4 @@ bin_PROGRAMS = 2048_test
 
 2048_test_LDADD = ../ai/utils/list.o ../ai/utils/tree.o ../ai/evaluator.o \
 ../models/board.o ../views/output.o ../ai/expectimax.o ../ai/utils/hash.o \
-../ai/board_pool.o ../models/calculator.o
+../ai/board_pool.o ../models/calculator.o -lm
