@@ -174,7 +174,7 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
 
   distinct = board_count_distinct_tiles(b);
   state.depth_limit = MAX(depth, distinct - 2);
-  state.depth_limit = MIN(state.depth_limit, 5);
+  state.depth_limit = MIN(state.depth_limit, MAX_SEARCH_DEPTH);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
