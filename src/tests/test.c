@@ -21,12 +21,13 @@ int main(int argc, char *argv[])
   tree *t = NULL;
   uint32 owner = 0;
   uint32 data[5] = {0, 1, 2, 3, 4};
+  int i = 0;
   tree_create(&t);
   tree_set_data_free_callback(t, &owner, data_free);
   tree_set_data_compare_callback(t, data_compare);
   tree_insert(t, NULL, &data[0]);
   tree_node *node = tree_get_root(t);
-  for (int i = 1; i < 5; i++)
+  for (i = 1; i < 5; i++)
   {
     tree_insert(t, node, &data[i]);
   }

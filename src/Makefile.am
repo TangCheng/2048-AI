@@ -8,7 +8,8 @@ AM_CPPFLAGS = \
 AM_CFLAGS =\
 	 -Wall\
 	 -g\
-	 -O0
+	 -O2\
+	 -std=c11
 
 AM_CXXFLAGS = \
 	-Wall\
@@ -35,4 +36,4 @@ bin_PROGRAMS = 2048
 
 2048_LDFLAGS =
 
-2048_LDADD =
+2048_LDADD = -lm

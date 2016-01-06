@@ -8,7 +8,8 @@ AM_CPPFLAGS = \
 AM_CFLAGS =\
 	 -Wall\
 	 -g\
-	 -O0\
+	 -O2\
+	 -std=c11\
 	 -I$(srcdir)/..
 
 bin_PROGRAMS = 2048_test
