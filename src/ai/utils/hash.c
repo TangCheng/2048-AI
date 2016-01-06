@@ -225,7 +225,7 @@ bool _hash_create(hash **self, uint32 size, const char *type_name)
 
   if (strcmp(trim(str_array[0], 3), "int")  &&
       strcmp(trim(str_array[0], 3), "long") &&
-      strcmp(trim(str_array[0], 3), "long lone") &&
+      strcmp(trim(str_array[0], 3), "long long") &&
       strcmp(trim(str_array[0], 3), "char*")) {
     goto failed_point;
   }

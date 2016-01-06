@@ -176,7 +176,7 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   state.max_depth = 0;
   state.cache_hits = 0;
   state.moves_evaled = 0;
-  hash_create(&state.depth_hash, 65535, long, long);
+  hash_create(&state.depth_hash, 65535, long long, long);
   hash_create(&state.heur_hash, 65535, long, float);
   new_bd = board_pool_get(self->bp);
   if (new_bd != NULL) {
