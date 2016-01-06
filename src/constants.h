@@ -12,6 +12,12 @@ typedef unsigned short        uint16;
 typedef unsigned int          uint32;
 typedef unsigned long long    uint64;
 
+#ifndef INT32_MIN
+#define INT32_MIN 0x80000000
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX 0x7FFFFFFF
+#endif
 /* The fundamental trick: the 4x4 board is represented as a 64-bit word,
  * with each board square packed into a single 4-bit nibble.
  *
