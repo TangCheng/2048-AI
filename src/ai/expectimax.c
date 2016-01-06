@@ -170,8 +170,10 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   float res = 0.0f;
   board_data *new_bd = NULL;
   eval_state state;
+  uint32 distinct = 0;
 
-  state.depth_limit = MAX(depth, board_count_distinct_tiles(b) - 2);
+  distinct = board_count_distinct_tiles(b);
+  state.depth_limit = MAX(depth, distinct - 2);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
