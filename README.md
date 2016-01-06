@@ -4,8 +4,11 @@ AI for the [2048 game](http://gabrielecirulli.github.io/2048/). This uses *expec
 
 ### Unix/Linux/OS X
 
+You should install build-essential and autoconf tools first.
+
 Execute
 
+    autoreconf
     ./configure
     make
 
