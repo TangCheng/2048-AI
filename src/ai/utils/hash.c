@@ -7,7 +7,7 @@
 #define TNLEN   32
 
 typedef struct _bucket {
-  uint32          h;            /* hash value of key, keyvalue if key is a uint
+  uint64          h;            /* hash value of key, keyvalue if key is a uint
                                    or ulong */
   char            *key;         /* the point to key , if key is a string */
   char            value[VLEN];  /* store a var of builtin type in a 8bit buffer */
@@ -175,7 +175,7 @@ static inline char **split(const char* string, char delim, uint32* count)
   return str_array;
 }
 
-static inline uint32 hash_func(hash *self, char *key)
+static inline uint64 hash_func(hash *self, char *key)
 {
   register uint32 hash_value = 5381;
   int32 key_length = strlen(key);
@@ -225,6 +225,7 @@ bool _hash_create(hash **self, uint32 size, const char *type_name)
 
   if (strcmp(trim(str_array[0], 3), "int")  &&
       strcmp(trim(str_array[0], 3), "long") &&
+      strcmp(trim(str_array[0], 3), "long lone") &&
       strcmp(trim(str_array[0], 3), "char*")) {
     goto failed_point;
   }
@@ -307,7 +308,7 @@ bool _hash_add(hash *self, ...)
   bool ret = false;
 
   if (self != NULL) {
-    uint32 h;
+    uint64 h;
     char *key = NULL;
     int key_len = 0;
     char value[VLEN];
@@ -321,6 +322,9 @@ bool _hash_add(hash *self, ...)
       h = k;
     } else if (strcmp(self->key_type, "long") == 0) {
       long k = va_arg(vlist, long);
+      h = k;
+    } else if (strcmp(self->key_type, "long long") == 0) {
+      long long k = va_arg(vlist, long long);
       h = k;
     } else if (strcmp(self->key_type, "char*") == 0) {
       char* k = va_arg(vlist, char*);
@@ -407,7 +411,7 @@ bool _hash_find(hash *self, ...)
   bool ret = false;
 
   if (self != NULL) {
-    uint32 h;
+    uint64 h;
     char *key = NULL;
     int key_len = 0;
     uint32 index = 0;
@@ -420,6 +424,9 @@ bool _hash_find(hash *self, ...)
       h = k;
     } else if (strcmp(self->key_type, "long") == 0) {
       long k = va_arg(vlist, long);
+      h = k;
+    } else if (strcmp(self->key_type, "long long") == 0) {
+      long long k = va_arg(vlist, long long);
       h = k;
     } else if (strcmp(self->key_type, "char*") == 0) {
       char *k = va_arg(vlist, char*);
@@ -478,7 +485,7 @@ bool _hash_del(hash *self, ...)
   bool ret = false;
 
   if (self != NULL) {
-    uint32 h;
+    uint64 h;
     char * key = NULL;
     int key_len = 0;
     uint32 index = 0;
@@ -491,6 +498,9 @@ bool _hash_del(hash *self, ...)
       h = k;
     } else if(strcmp(self->key_type, "long") == 0) {
       long k = va_arg(vlist, long);
+      h = k;
+    } else if (strcmp(self->key_type, "long long") == 0) {
+      long long k = va_arg(vlist, long long);
       h = k;
     } else if (strcmp(self->key_type, "char*") == 0) {
       char *k = va_arg(vlist, char *);
@@ -536,7 +546,7 @@ bool _hash_exists(hash *self, ...)
   bool ret = false;
 
   if (self != NULL) {
-    uint32 h;
+    uint64 h;
     char * key = NULL;
     int key_len = 0;
     uint32 index = 0;
@@ -549,6 +559,9 @@ bool _hash_exists(hash *self, ...)
       h = k;
     } else if(strcmp(self->key_type, "long") == 0) {
       long k = va_arg(vlist, long);
+      h = k;
+    } else if (strcmp(self->key_type, "long long") == 0) {
+      long long k = va_arg(vlist, long long);
       h = k;
     } else if (strcmp(self->key_type, "char*") == 0) {
       char *k = va_arg(vlist, char *);

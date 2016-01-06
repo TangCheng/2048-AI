@@ -176,9 +176,9 @@ uint64 *board_get_availables(board *self)
     if (pos_array != NULL)
     {
       memset((char *)pos_array, 0, sizeof(uint64) * self->rows * self->cols);
-      for (x = 0; x < self->cols; x++)
+      for (y = 0; y < self->rows; y++)
       {
-        for (y = 0; y < self->rows; y++)
+        for (x = 0; x < self->cols; x++)
         {
           power_val = board_get_power_val(self, x, y);
           if (power_val == 0)

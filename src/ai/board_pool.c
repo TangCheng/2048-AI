@@ -75,6 +75,7 @@ board_data *board_pool_get(board_pool *self)
     bd->value = 0.0;
     bd->alpha = INT32_MAX;
     bd->beta = INT32_MIN;
+    board_set_contents(bd->b, 0ULL);
   }
 
   return bd;

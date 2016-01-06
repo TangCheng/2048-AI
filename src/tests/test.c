@@ -3,6 +3,7 @@
 #include "../ai/utils/tree.h"
 #include "../ai/evaluator.h"
 #include "../views/output.h"
+#include "../ai/expectimax.h"
 
 void data_free(void *owner, void *data)
 {
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
 
   board *b = NULL;
   evaluator *eval = NULL;
+  expectimax *engine = NULL;
   cout *o = NULL;
   if (board_create(&b, ROWS_OF_BOARD, COLS_OF_BOARD))
   {
@@ -79,6 +81,27 @@ int main(int argc, char *argv[])
     printf("max value is %u\n", evaluator_max_value(eval, b));
     printf("islands is %u\n", evaluator_islands(eval, b));
     printf("value is %.13f\n", evaluator_get_value(eval, b));
+
+    board_set_value(b, 0, 0, 2);
+    board_set_value(b, 1, 0, 0);
+    board_set_value(b, 2, 0, 2);
+    board_set_value(b, 3, 0, 0);
+    board_set_value(b, 0, 1, 4);
+    board_set_value(b, 1, 1, 0);
+    board_set_value(b, 2, 1, 0);
+    board_set_value(b, 3, 1, 0);
+    board_set_value(b, 0, 2, 2);
+    board_set_value(b, 1, 2, 4);
+    board_set_value(b, 2, 2, 2);
+    board_set_value(b, 3, 2, 0);
+    board_set_value(b, 0, 3, 64);
+    board_set_value(b, 1, 3, 16);
+    board_set_value(b, 2, 3, 4);
+    board_set_value(b, 3, 3, 0);
+    cout_display_board(o, b);
+    expectimax_create(&engine);
+    expectimax_search(engine, b, BOTTOM_OF_DIRECTION, MIN_SEARCH_DEPTH);
+    expectimax_destory(&engine);
 
     evaluator_destory(&eval);
     cout_destory(&o);

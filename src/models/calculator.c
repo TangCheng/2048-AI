@@ -187,9 +187,11 @@ static inline bool calculator_move_up(calculator *self, board *c, board *n)
   origin ^= self->col_up_table[(t >> 16) & ROW_MASK] <<  4;
   origin ^= self->col_up_table[(t >> 32) & ROW_MASK] <<  8;
   origin ^= self->col_up_table[(t >> 48) & ROW_MASK] << 12;
-  board_set_contents(n, origin);
 
   ret = (origin != transpose(t));
+  if (ret == true) {
+    board_set_contents(n, origin);
+  }
   return ret;
 }
 
@@ -202,9 +204,11 @@ static inline bool calculator_move_down(calculator *self, board *c, board *n)
   origin ^= self->col_down_table[(t >> 16) & ROW_MASK] <<  4;
   origin ^= self->col_down_table[(t >> 32) & ROW_MASK] <<  8;
   origin ^= self->col_down_table[(t >> 48) & ROW_MASK] << 12;
-  board_set_contents(n, origin);
 
   ret = (origin != transpose(t));
+  if (ret == true) {
+    board_set_contents(n, origin);
+  }
   return ret;
 }
 
@@ -217,9 +221,11 @@ static inline bool calculator_move_left(calculator *self, board *c, board *n)
   origin ^= (board_t)(self->row_left_table[(t >> 16) & ROW_MASK]) << 16;
   origin ^= (board_t)(self->row_left_table[(t >> 32) & ROW_MASK]) << 32;
   origin ^= (board_t)(self->row_left_table[(t >> 48) & ROW_MASK]) << 48;
-  board_set_contents(n, origin);
 
   ret = (origin != t);
+  if (ret == true) {
+    board_set_contents(n, origin);
+  }
   return ret;
 }
 
@@ -232,8 +238,10 @@ static inline bool calculator_move_right(calculator *self, board *c, board *n)
   origin ^= (board_t)(self->row_right_table[(t >> 16) & ROW_MASK]) << 16;
   origin ^= (board_t)(self->row_right_table[(t >> 32) & ROW_MASK]) << 32;
   origin ^= (board_t)(self->row_right_table[(t >> 48) & ROW_MASK]) << 48;
-  board_set_contents(n, origin);
 
   ret = (origin != t);
+  if (ret == true) {
+    board_set_contents(n, origin);
+  }
   return ret;
 }

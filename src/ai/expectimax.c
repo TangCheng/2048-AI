@@ -4,18 +4,26 @@
 #include "board_pool.h"
 #include "../models/calculator.h"
 #include "utils/hash.h"
+#include "../views/output.h"
 
 typedef struct _expectimax
 {
   board_pool    *bp;
   calculator    *bc;
+  cout          *o;
+  float         heur_score_table[SCORE_TABLE_SIZE];
+} expectimax;
+
+typedef struct _eval_state
+{
   hash          *depth_hash;
   hash          *heur_hash;
   uint32        depth_limit;
   uint32        current_depth;
   uint32        max_depth;
-  float         heur_score_table[SCORE_TABLE_SIZE];
-} expectimax;
+  uint32        cache_hits;
+  uint32        moves_evaled;
+} eval_state;
 
 #define MAX(a, b)   (((a) >= (b)) ? (a) : (b))
 #define MIN(a, b)   (((a) <= (b)) ? (a) : (b))
@@ -32,13 +40,14 @@ typedef struct _expectimax
 static void expectimax_init_table(expectimax *self);
 static float expectimax_score_toplevel_move(expectimax *self, board *b,
   enum direction dir, uint32 depth);
-static float expectimax_score_tilechoose_node(expectimax *self, board *b,
-  float cprob);
-static float expectimax_score_move_node(expectimax *self, board *b,
-  float cprob);
+static float expectimax_score_tilechoose_node(expectimax *self,
+  eval_state *state, board *b, float cprob);
+static float expectimax_score_move_node(expectimax *self, eval_state *state,
+  board *b, float cprob);
 static inline float expectimax_score_heur_board(expectimax *self, board *b);
 static inline float expectimax_score_helper(expectimax *self, board_t contents,
   const float *table);
+static inline void expectimax_show_board(expectimax *self, board *b);
 
 bool expectimax_create(expectimax **self)
 {
@@ -49,9 +58,7 @@ bool expectimax_create(expectimax **self)
   {
     board_pool_create(&(*self)->bp);
     calculator_create(&(*self)->bc);
-    (*self)->depth_limit = 0;
-    (*self)->current_depth = 0;
-    (*self)->max_depth = 0;
+    cout_create(&(*self)->o);
     expectimax_init_table(*self);
     ret = true;
   }
@@ -65,6 +72,7 @@ void expectimax_destory(expectimax **self)
   {
     calculator_destory(&(*self)->bc);
     board_pool_destory(&(*self)->bp);
+    cout_destory(&(*self)->o);
     free(*self);
     *self = NULL;
   }
@@ -80,11 +88,12 @@ enum direction expectimax_search(expectimax *self, board *b,
 
   if (self != NULL && b != NULL && depth != 0)
   {
+    //LOG("board scores: heur %.0f", expectimax_score_heur_board(self, b));
     for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
       res = expectimax_score_toplevel_move(self, b, dir, depth);
-      if(res > best) {
-          best = res;
-          best_dir = dir;
+      if (res > best) {
+        best = res;
+        best_dir = dir;
       }
     }
   }
@@ -160,21 +169,29 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
 {
   float res = 0.0f;
   board_data *new_bd = NULL;
+  eval_state state;
 
-  self->depth_limit = MAX(depth, board_count_distinct_tiles(b) - 2);
-  self->current_depth = 0;
-  self->max_depth = 0;
-  hash_create(&self->depth_hash, 65535, long, long);
-  hash_create(&self->heur_hash, 65535, long, float);
+  state.depth_limit = MAX(depth, board_count_distinct_tiles(b) - 2);
+  state.current_depth = 0;
+  state.max_depth = 0;
+  state.cache_hits = 0;
+  state.moves_evaled = 0;
+  hash_create(&state.depth_hash, 65535, long, long);
+  hash_create(&state.heur_hash, 65535, long, float);
   new_bd = board_pool_get(self->bp);
   if (new_bd != NULL) {
-    if (calculator_move(self->bc, b, new_bd->b, dir)) {
-      res = expectimax_score_tilechoose_node(self, new_bd->b, 1.0f) + 1e-6;
+    if (calculator_move(self->bc, b, new_bd->b, dir) == true) {
+      res = expectimax_score_tilechoose_node(self, &state, new_bd->b, 1.0f) + 1e-6;
     }
     board_pool_put(self->bp, new_bd);
   }
-  hash_destory(&self->heur_hash);
-  hash_destory(&self->depth_hash);
+  /*
+  LOG("res is %f, dir is %u, cachehits %u, cachesize %u, maxdepth %u, evaled %u moves",
+    res, dir, state.cache_hits, hash_num_elements(state.depth_hash),
+    state.max_depth, state.moves_evaled);
+  */
+  hash_destory(&state.heur_hash);
+  hash_destory(&state.depth_hash);
   return res;
 }
 
@@ -182,8 +199,8 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
 // cprob: cumulative probability
 // don't recurse into a node with a cprob less than this threshold
 #define CPROB_THRESH_BASE     0.0001f
-static float expectimax_score_tilechoose_node(expectimax *self, board *b,
-  float cprob)
+static float expectimax_score_tilechoose_node(expectimax *self,
+  eval_state *state, board *b, float cprob)
 {
   uint32 availables_count = 0;
   uint64 *pos_array = NULL;
@@ -193,12 +210,12 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
   float res = 0.0f;
   board_t contents = 0ULL;
 
-  if (cprob < CPROB_THRESH_BASE || self->current_depth >= self->depth_limit) {
-      self->max_depth = MAX(self->current_depth, self->max_depth);
+  if (cprob < CPROB_THRESH_BASE || state->current_depth >= state->depth_limit) {
+      state->max_depth = MAX(state->current_depth, state->max_depth);
       return expectimax_score_heur_board(self, b);
   }
   contents = board_get_contents(b);
-  if (self->current_depth < MAX_SEARCH_DEPTH) {
+  if (state->current_depth < MAX_SEARCH_DEPTH) {
     /*
     return heuristic from transposition table only if it means that
     the node will have been evaluated to a minimum depth of state.depth_limit.
@@ -206,9 +223,10 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
     strength of the ai negatively.
     */
     long depth = 0;
-    if (hash_find(self->depth_hash, contents, &depth) == true) {
-      if (depth <= self->current_depth) {
-        hash_find(self->heur_hash, contents, &res);
+    if (hash_find(state->depth_hash, contents, &depth) == true) {
+      if (depth <= state->current_depth) {
+        hash_find(state->heur_hash, contents, &res);
+        state->cache_hits++;
         return res;
       }
     }
@@ -219,48 +237,60 @@ static float expectimax_score_tilechoose_node(expectimax *self, board *b,
   cprob /= availables_count;
 
   bd = board_pool_get(self->bp);
+  //LOG("current depth is %u", state->current_depth);
   if (bd != NULL) {
     while (i < availables_count) {
       for (j = 0; j < ARRAY_SIZE(val_array); j++) {
         board_clone_data(bd->b, b);
         board_set_value_by_pos(bd->b, pos_array[i], val_array[j]);
-        res += expectimax_score_move_node(self, bd->b , cprob * 0.5f) * 0.5f;
+        //expectimax_show_board(self, bd->b);
+        if (val_array[j] == 2) {
+          res += expectimax_score_move_node(self, state, bd->b , cprob * 0.5f)
+            * 0.5f;
+        } else {
+          res += expectimax_score_move_node(self, state, bd->b , cprob * 0.5f)
+            * 0.5f;
+        }
       }
       i++;
     }
     board_pool_put(self->bp, bd);
   }
   free(pos_array);
+  //LOG("res is %f", res);
   res = res / availables_count;
 
-  if (self->current_depth < MAX_SEARCH_DEPTH) {
-    hash_add(self->depth_hash, contents, self->current_depth);
-    hash_add(self->heur_hash, contents, res);
+  if (state->current_depth < MAX_SEARCH_DEPTH) {
+    hash_add(state->depth_hash, contents, state->current_depth);
+    hash_add(state->heur_hash, contents, res);
   }
 
   return res;
 }
 
-static float expectimax_score_move_node(expectimax *self, board *b,
-  float cprob)
+static float expectimax_score_move_node(expectimax *self, eval_state *state,
+  board *b, float cprob)
 {
   float best = 0.0f;
+  float ret = 0.0f;
   enum direction dir = UP;
   board_data *new_bd = NULL;
 
-  self->current_depth++;
+  state->current_depth++;
   new_bd = board_pool_get(self->bp);
   if (new_bd != NULL) {
     for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
-      //state.moves_evaled++;
+      //LOG("dir is %u", dir);
+      state->moves_evaled++;
       if (calculator_move(self->bc, b, new_bd->b, dir) == true) {
-        best = MAX(best, expectimax_score_tilechoose_node(self, new_bd->b, cprob));
+        ret = expectimax_score_tilechoose_node(self, state, new_bd->b, cprob);
+        best = MAX(best, ret);
       }
     }
     board_pool_put(self->bp, new_bd);
   }
-  self->current_depth--;
-
+  state->current_depth--;
+  //LOG("best is %f, evaled %u moves", best, state->moves_evaled);
   return best;
 }
 
@@ -288,4 +318,10 @@ static inline float expectimax_score_helper(expectimax *self, board_t contents,
         table[(contents >> 48) & ROW_MASK];
 
   return ret;
+}
+
+static inline void expectimax_show_board(expectimax *self, board *b)
+{
+  LOG("");
+  cout_display_board(self->o, b);
 }

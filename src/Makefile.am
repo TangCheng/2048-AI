@@ -8,7 +8,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS =\
 	 -Wall\
 	 -g\
-	 -O2
+	 -O0
 
 AM_CXXFLAGS = \
 	-Wall\

@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include "output.h"
 
-#define STANDARD_OUTPUT(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+#define STANDARD_OUTPUT(format, ...) do { \
+  fprintf(stdout, format, ##__VA_ARGS__); \
+  /* fflush(stdout); */                        \
+} while(0);
 
 typedef struct _console_output
 {
