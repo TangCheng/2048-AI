@@ -174,7 +174,7 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
 
   distinct = board_count_distinct_tiles(b);
   state.depth_limit = MAX(depth, distinct - 2);
-  state.depth_limit = MIN(state.depth_limit, 4);
+  state.depth_limit = MIN(state.depth_limit, 5);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
@@ -247,13 +247,8 @@ static float expectimax_score_tilechoose_node(expectimax *self,
         board_clone_data(bd->b, b);
         board_set_value_by_pos(bd->b, pos_array[i], val_array[j]);
         //expectimax_show_board(self, bd->b);
-        if (val_array[j] == 2) {
-          res += expectimax_score_move_node(self, state, bd->b , cprob * 0.5f)
-            * 0.5f;
-        } else {
-          res += expectimax_score_move_node(self, state, bd->b , cprob * 0.5f)
-            * 0.5f;
-        }
+        res += expectimax_score_move_node(self, state, bd->b , cprob * 0.5f)
+          * 0.5f;
       }
       i++;
     }
