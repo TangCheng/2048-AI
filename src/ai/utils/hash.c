@@ -413,7 +413,6 @@ bool _hash_find(hash *self, ...)
   if (self != NULL) {
     uint64 h;
     char *key = NULL;
-    int key_len = 0;
     uint32 index = 0;
     bucket *p = NULL;
 
@@ -432,7 +431,6 @@ bool _hash_find(hash *self, ...)
       char *k = va_arg(vlist, char*);
       h = hash_func(self, k);
       key = k;
-      key_len = strlen(key);
     }
     else{
       return ret;
@@ -487,7 +485,6 @@ bool _hash_del(hash *self, ...)
   if (self != NULL) {
     uint64 h;
     char * key = NULL;
-    int key_len = 0;
     uint32 index = 0;
     bucket *p = NULL;
 
@@ -506,7 +503,6 @@ bool _hash_del(hash *self, ...)
       char *k = va_arg(vlist, char *);
       h = hash_func(self, k);
       key = k;
-      key_len = strlen(key);
     } else {
       return ret;
     }
@@ -548,7 +544,6 @@ bool _hash_exists(hash *self, ...)
   if (self != NULL) {
     uint64 h;
     char * key = NULL;
-    int key_len = 0;
     uint32 index = 0;
     bucket *p = NULL;
 
@@ -567,7 +562,6 @@ bool _hash_exists(hash *self, ...)
       char *k = va_arg(vlist, char *);
       h = hash_func(self, k);
       key = k;
-      key_len = strlen(key);
     } else {
       return ret;
     }
@@ -598,5 +592,4 @@ uint32  hash_num_elements(hash *self)
   } else {
     return 0;
   }
-
 }

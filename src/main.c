@@ -37,7 +37,7 @@ static inline void show_time(struct timeval *now)
 	t = now->tv_sec;
 	today = localtime(&t);
 	strftime(buf, BUF_LEN, "%Y-%m-%d %H:%M:%S", today);
-	LOG("%s.%u", buf, now->tv_usec / 1000);
+	LOG("%s.%u", buf, (uint32)(now->tv_usec / 1000));
 }
 
 static inline void show_elapsed(struct timeval *begin, struct timeval *end)

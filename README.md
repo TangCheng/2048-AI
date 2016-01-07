@@ -9,7 +9,10 @@ You should install build-essential and autoconf tools first.
 Execute
 
     autoreconf
-    ./configure
+    mkdir build
+    cd build
+    ../configure
     make
+    ./src/2048
 
 Note that you don't do `make install`; this program is meant to be run from this directory.

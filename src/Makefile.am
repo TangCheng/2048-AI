@@ -7,13 +7,10 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS =\
 	 -Wall\
+	 -Wno-strict-aliasing\
 	 -g\
 	 -O2\
 	 -std=c11
-
-AM_CXXFLAGS = \
-	-Wall\
-	-g
 
 bin_PROGRAMS = 2048
 
