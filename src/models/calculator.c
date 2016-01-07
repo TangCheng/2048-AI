@@ -132,6 +132,7 @@ static void calculator_init_tables(calculator *self)
     }
     self->score_table[row] = score;
 
+#ifndef MERGE_ONCE_PER_ROW_OR_COL
     // execute a move to the left
     for (i = 0; i < COLS_OF_BOARD - 1; i++)
     {
@@ -163,6 +164,43 @@ static void calculator_init_tables(calculator *self)
         line[j] = 0;
       }
     }
+#else
+    // execute a move to the left
+    for (i = 0; i < COLS_OF_BOARD - 1; i++) {
+      for (j = i + 1; j < COLS_OF_BOARD; j++) {
+          if (line[j] != 0) {
+            break;
+          }
+      }
+      if (j == COLS_OF_BOARD) {
+        break; // no more tiles to the right
+      }
+
+      if (line[i] == line[j]) {
+        if(line[i] != 0xf) {
+          /* Pretend that 32768 + 32768 = 32768 (representational limit). */
+          line[i]++;
+        }
+        line[j] = 0;
+        break;
+      }
+    }
+    for (i = 0; i < COLS_OF_BOARD - 1; i++) {
+      if (line[i] == 0) {
+        for (j = i + 1; j < COLS_OF_BOARD; j++) {
+            if (line[j] != 0) {
+              break;
+            }
+        }
+        if (j == COLS_OF_BOARD) {
+          break; // no more tiles to the right
+        }
+        line[i] = line[j];
+        line[j] = 0;
+        i--; // retry this entry
+      }
+    }
+#endif
 
     result = (line[0] <<  0) |
              (line[1] <<  4) |

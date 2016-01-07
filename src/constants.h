@@ -47,6 +47,7 @@ typedef enum boolean
 #define MIN(a, b)       (((a) <= (b)) ? (a) : (b))
 
 #define AUTO_PLAY
+#define MERGE_ONCE_PER_ROW_OR_COL
 #define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
