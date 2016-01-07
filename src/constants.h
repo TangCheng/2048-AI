@@ -43,12 +43,14 @@ typedef enum boolean
 #endif
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
+#define MAX(a, b)       (((a) >= (b)) ? (a) : (b))
+#define MIN(a, b)       (((a) <= (b)) ? (a) : (b))
 
 #define AUTO_PLAY
 #define THINKING_BY_DEPTH
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
-#define MAX_SEARCH_DEPTH      4
+#define MAX_SEARCH_DEPTH      15
 
 #define AI_ENGINE                    expectimax /* minmax or expectimax */
 #define __AI_ENGINE_CREATE(name, a)  name##_create(a)

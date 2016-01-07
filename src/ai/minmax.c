@@ -14,8 +14,6 @@ typedef struct _minmax
   calculator  *bc;
 } minmax;
 
-#define MIN(a, b)   (((a) <= (b)) ? (a) : (b))
-
 static bool minmax_change_tree_root(minmax *self, board *b,
   enum direction last_dir);
 static void minmax_growth_tree(minmax *self);

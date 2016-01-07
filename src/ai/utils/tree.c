@@ -2,8 +2,6 @@
 #include "tree.h"
 #include "list.h"
 
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-
 typedef struct _tree_node tree_node;
 
 typedef struct _tree
@@ -418,11 +416,13 @@ static void tree_release_unused_nodes(tree *self)
 
 static void tree_traverse_for_depth(tree *self, tree_node *root)
 {
+  uint32 node_level = 0;
   if (root != NULL)
   {
     if (root->first_child == NULL)
     {
-      self->depth = MAX(self->depth, tree_get_node_level(self, root));
+      node_level = tree_get_node_level(self, root);
+      self->depth = MAX(self->depth, node_level);
     }
     tree_traverse_for_depth(self, root->first_child);
     tree_traverse_for_depth(self, root->next_sibling);
@@ -431,9 +431,11 @@ static void tree_traverse_for_depth(tree *self, tree_node *root)
 
 static void tree_traverse_for_degree(tree *self, tree_node *root)
 {
+  uint32 node_degree = 0;
   if (root != NULL)
   {
-    self->degree = MAX(self->degree, tree_get_node_degree(self, root));
+    node_degree = tree_get_node_degree(self, root);
+    self->degree = MAX(self->degree, node_degree);
     tree_traverse_for_depth(self, root->first_child);
     tree_traverse_for_depth(self, root->next_sibling);
   }

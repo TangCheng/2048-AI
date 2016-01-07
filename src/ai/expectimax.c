@@ -25,9 +25,6 @@ typedef struct _eval_state
   uint32        moves_evaled;
 } eval_state;
 
-#define MAX(a, b)   (((a) >= (b)) ? (a) : (b))
-#define MIN(a, b)   (((a) <= (b)) ? (a) : (b))
-
 // Heuristic scoring settings
 #define SCORE_LOST_PENALTY          200000.0f
 #define SCORE_MONOTONICITY_POWER    4.0f
@@ -60,6 +57,8 @@ bool expectimax_create(expectimax **self)
     calculator_create(&(*self)->bc);
     cout_create(&(*self)->o);
     expectimax_init_table(*self);
+    // do NOTHING, just remove warning of compiler
+    expectimax_show_board(*self, NULL);
     ret = true;
   }
 
@@ -173,8 +172,9 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   uint32 distinct = 0;
 
   distinct = board_count_distinct_tiles(b);
-  state.depth_limit = MAX(depth, distinct - 2);
-  state.depth_limit = MIN(state.depth_limit, MAX_SEARCH_DEPTH);
+  state.depth_limit = MAX(depth, distinct / 2);
+  //state.depth_limit = MAX(depth, distinct - 2);
+  //state.depth_limit = MIN(state.depth_limit, MAX_SEARCH_DEPTH);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;

@@ -10,8 +10,6 @@ typedef struct _evaluator
   double   max_value_weight;
 } evaluator;
 
-#define MAX(a, b)   (((a) >= (b)) ? (a) : (b))
-
 #define SMOOTHNESS_WEIGHT         0.1
 #define MONOTONICITY_WEIGHT       1.0
 #define EMPTY_WEIGHT              2.7
