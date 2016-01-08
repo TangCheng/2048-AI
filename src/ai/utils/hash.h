@@ -20,13 +20,6 @@ typedef struct _hash hash;
 #define hash_exists(h, key)                    \
        _hash_exists((h), (key))
 
-#define reset(ht)       ((ht)->pInternalPointer = (ht)->pListHead)
-#define next(ht)        ((ht)->pInternalPointer = (ht)->pInternalPointer->pListNext)
-#define isnotend(ht)    ((ht)->pInternalPointer != NULL)
-#define nkey(ht)        ((ht)->pInternalPointer->h)
-#define skey(ht)        ((ht)->pInternalPointer->key)
-#define value(ht)       ((ht)->pInternalPointer->value)
-
 bool _hash_create(hash **self, uint32 size, const char *type_name);
 void hash_destory(hash **self);
 bool _hash_add(hash *self, ...);

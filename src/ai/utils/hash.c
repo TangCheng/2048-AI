@@ -78,6 +78,13 @@ typedef struct _hash
   }                                                            \
 } while(0);
 
+#define reset(h)       ((h)->pInternalPointer = (h)->pListHead)
+#define next(h)        ((h)->pInternalPointer = (h)->pInternalPointer->pListNext)
+#define isnotend(h)    ((h)->pInternalPointer != NULL)
+#define nkey(h)        ((h)->pInternalPointer->h)
+#define skey(h)        ((h)->pInternalPointer->key)
+#define value(h)       ((h)->pInternalPointer->value)
+
 static inline int php_charmask(unsigned char *input, int len, char *mask)
 {
   unsigned char *end;

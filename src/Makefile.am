@@ -12,7 +12,8 @@ AM_CFLAGS =\
 	 -O2\
 	 -std=c11
 
-bin_PROGRAMS = 2048
+bin_PROGRAMS = 2048\
+	2048AI
 
 2048_SOURCES = \
 	views/output.c \
@@ -34,3 +35,10 @@ bin_PROGRAMS = 2048
 2048_LDFLAGS =
 
 2048_LDADD = -lm
+
+2048AI_SOURCES = \
+	2048.c
+
+2048AI_LDFLAGS =
+
+2048AI_LDADD = -lm

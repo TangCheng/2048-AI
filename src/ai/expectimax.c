@@ -3,8 +3,15 @@
 #include "expectimax.h"
 #include "board_pool.h"
 #include "../models/calculator.h"
-#include "utils/hash.h"
+#include "ai/utils/uthash.h"
 #include "../views/output.h"
+
+typedef struct _cache {
+  void *b;
+  uint64 depth;
+  float  heur;
+  UT_hash_handle hh;
+} cache_t;
 
 typedef struct _expectimax
 {
@@ -16,8 +23,7 @@ typedef struct _expectimax
 
 typedef struct _eval_state
 {
-  hash          *depth_hash;
-  hash          *heur_hash;
+  cache_t       *caches;
   uint32        depth_limit;
   uint32        current_depth;
   uint32        max_depth;
@@ -172,15 +178,12 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   uint32 distinct = 0;
 
   distinct = board_count_distinct_tiles(b);
-  state.depth_limit = MAX(depth, distinct / 2);
-  //state.depth_limit = MAX(depth, distinct - 2);
-  //state.depth_limit = MIN(state.depth_limit, MAX_SEARCH_DEPTH);
+  state.depth_limit = MAX(depth, distinct - 2);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
   state.moves_evaled = 0;
-  hash_create(&state.depth_hash, 65535, long long, long);
-  hash_create(&state.heur_hash, 65535, long, float);
+  state.caches = NULL;
   new_bd = board_pool_get(self->bp);
   if (new_bd != NULL) {
     if (calculator_move(self->bc, b, new_bd->b, dir) == true) {
@@ -190,11 +193,14 @@ static float expectimax_score_toplevel_move(expectimax *self, board *b,
   }
   /*
   LOG("res is %f, dir is %u, cachehits %u, cachesize %u, maxdepth %u, evaled %u moves",
-    res, dir, state.cache_hits, hash_num_elements(state.depth_hash),
-    state.max_depth, state.moves_evaled);
+    res, dir, state.cache_hits, HASH_COUNT(state.caches), state.max_depth,
+    state.moves_evaled);
   */
-  hash_destory(&state.heur_hash);
-  hash_destory(&state.depth_hash);
+  cache_t *cache, *tmp;
+  HASH_ITER(hh, state.caches, cache, tmp) {
+    HASH_DEL(state.caches, cache);
+    free(cache);
+  }
   return res;
 }
 
@@ -225,12 +231,12 @@ static float expectimax_score_tilechoose_node(expectimax *self,
     This will result in slightly fewer cache hits, but should not impact the
     strength of the ai negatively.
     */
-    long depth = 0;
-    if (hash_find(state->depth_hash, contents, &depth) == true) {
-      if (depth <= state->current_depth) {
-        hash_find(state->heur_hash, contents, &res);
+    cache_t *cache = NULL;
+    HASH_FIND_PTR(state->caches, &contents, cache);
+    if (cache != NULL) {
+      if (cache->depth <= state->current_depth) {
         state->cache_hits++;
-        return res;
+        return cache->heur;
       }
     }
   }
@@ -259,8 +265,11 @@ static float expectimax_score_tilechoose_node(expectimax *self,
   res = res / availables_count;
 
   if (state->current_depth < MAX_SEARCH_DEPTH) {
-    hash_add(state->depth_hash, contents, state->current_depth);
-    hash_add(state->heur_hash, contents, res);
+    cache_t *cache = (cache_t *)malloc(sizeof(cache_t));
+    cache->b = (void *)contents;
+    cache->depth = state->current_depth;
+    cache->heur = res;
+    HASH_ADD_PTR(state->caches, b, cache);
   }
 
   return res;
