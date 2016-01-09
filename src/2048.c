@@ -615,11 +615,6 @@ void play_game(void)
   pthread_cond_destroy(&search_cond);
 }
 
-void proc(void *arg)
-{
-  printf("%d\n", (int)arg);
-}
-
 int main()
 {
 	struct timeval begin, end;

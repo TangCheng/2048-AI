@@ -43,4 +43,4 @@ bin_PROGRAMS = 2048\
 
 2048AI_LDFLAGS =
 
-2048AI_LDADD = -lm
+2048AI_LDADD = -lm -lpthread
