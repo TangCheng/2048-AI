@@ -79,7 +79,7 @@ bool calculator_move(calculator *self, board *current, board *next, enum directi
     }
     if (ret == true)
     {
-      board_t contents = board_get_contents(next);
+      register board_t contents = board_get_contents(next);
       self->score = self->score_table[(contents >>  0) & ROW_MASK] +
                     self->score_table[(contents >> 16) & ROW_MASK] +
                     self->score_table[(contents >> 32) & ROW_MASK] +
@@ -219,8 +219,8 @@ static void calculator_init_tables(calculator *self)
 static inline bool calculator_move_up(calculator *self, board *c, board *n)
 {
   bool ret = false;
-  board_t origin = board_get_contents(c);
-  board_t t = transpose(origin);
+  register board_t origin = board_get_contents(c);
+  register board_t t = transpose(origin);
   origin ^= self->col_up_table[(t >>  0) & ROW_MASK] <<  0;
   origin ^= self->col_up_table[(t >> 16) & ROW_MASK] <<  4;
   origin ^= self->col_up_table[(t >> 32) & ROW_MASK] <<  8;
@@ -236,8 +236,8 @@ static inline bool calculator_move_up(calculator *self, board *c, board *n)
 static inline bool calculator_move_down(calculator *self, board *c, board *n)
 {
   bool ret = false;
-  board_t origin = board_get_contents(c);
-  board_t t = transpose(origin);
+  register board_t origin = board_get_contents(c);
+  register board_t t = transpose(origin);
   origin ^= self->col_down_table[(t >>  0) & ROW_MASK] <<  0;
   origin ^= self->col_down_table[(t >> 16) & ROW_MASK] <<  4;
   origin ^= self->col_down_table[(t >> 32) & ROW_MASK] <<  8;
@@ -253,8 +253,8 @@ static inline bool calculator_move_down(calculator *self, board *c, board *n)
 static inline bool calculator_move_left(calculator *self, board *c, board *n)
 {
   bool ret = false;
-  board_t origin = board_get_contents(c);
-  board_t t = origin;
+  register board_t origin = board_get_contents(c);
+  register board_t t = origin;
   origin ^= (board_t)(self->row_left_table[(t >>  0) & ROW_MASK]) <<  0;
   origin ^= (board_t)(self->row_left_table[(t >> 16) & ROW_MASK]) << 16;
   origin ^= (board_t)(self->row_left_table[(t >> 32) & ROW_MASK]) << 32;
@@ -270,8 +270,8 @@ static inline bool calculator_move_left(calculator *self, board *c, board *n)
 static inline bool calculator_move_right(calculator *self, board *c, board *n)
 {
   bool ret = false;
-  board_t origin = board_get_contents(c);
-  board_t t = origin;
+  register board_t origin = board_get_contents(c);
+  register board_t t = origin;
   origin ^= (board_t)(self->row_right_table[(t >>  0) & ROW_MASK]) <<  0;
   origin ^= (board_t)(self->row_right_table[(t >> 16) & ROW_MASK]) << 16;
   origin ^= (board_t)(self->row_right_table[(t >> 32) & ROW_MASK]) << 32;

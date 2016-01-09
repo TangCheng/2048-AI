@@ -251,7 +251,7 @@ static inline uint8 board_get_power_val(board *self, uint32 x, uint32 y)
 static inline void board_set_power_val(board *self, uint32 x, uint32 y,
   uint8 power_val)
 {
-  uint64 temp = 0ULL;
+  register uint64 temp = 0ULL;
 
   temp = 0x0FULL << OFFSET_BY_X_Y(x, y);
   temp = ~temp;

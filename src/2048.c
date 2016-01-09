@@ -510,7 +510,7 @@ static inline board_t draw_tile() {
 }
 
 static inline board_t insert_tile_rand(board_t b, board_t tile) {
-  int index = rand() % (count_empty(b) + 1);
+  int index = rand() % count_empty(b);
   board_t tmp = b;
   while (true) {
     while ((tmp & 0xf) != 0) {
