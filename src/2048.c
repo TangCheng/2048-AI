@@ -19,17 +19,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
 #include <math.h>
 #include "constants.h"
 #include "ai/utils/uthash.h"
+#include "ai/utils/thread_pool.h"
 
 #define BUF_LEN	100
 #define MILLIONSECONDS_PER_SECOND	1000ULL
 #define MILLIONSECONDS_PER_MINUTE (MILLIONSECONDS_PER_SECOND * 60ULL)
 #define MILLIONSECONDS_PER_HOUR		(MILLIONSECONDS_PER_MINUTE * 60ULL)
 #define MILLIONSECONDS_PER_DAY 		(MILLIONSECONDS_PER_HOUR * 24ULL)
+
+typedef struct _search_job
+{
+  board_t b;
+  enum direction dir;
+} search_job;
 
 typedef struct _cache {
   void *b;
@@ -124,6 +134,10 @@ static board_t col_up_table[65536];
 static board_t col_down_table[65536];
 static float heur_score_table[65536];
 static float score_table[65536];
+static float score[BOTTOM_OF_DIRECTION];
+static bool search_completed[BOTTOM_OF_DIRECTION];
+static pthread_mutex_t mutex;
+static pthread_cond_t search_cond;
 
 // Heuristic scoring settings
 static const float SCORE_LOST_PENALTY = 200000.0f;
@@ -450,13 +464,17 @@ static float _score_toplevel_move(eval_state *state, board_t b,
 }
 
 //#define SHOW_STEP_ELAPSED_TIME
-static eval_state state;
-float score_toplevel_move(board_t b, enum direction dir) {
+void score_toplevel_move(void *arg) {
+  search_job *p = (search_job *)arg;
+  board_t b = p->b;
+  enum direction dir = p->dir;
+  free(p);
   float res = 0.0f;
 #ifdef SHOW_STEP_ELAPSED_TIME
   struct timeval start, finish;
   double elapsed = 0.0;
 #endif
+  eval_state state;
   int distinct = count_distinct_tiles(b);
   state.depth_limit = MAX(MIN_SEARCH_DEPTH, distinct - 2);
   state.moves_evaled = 0;
@@ -481,26 +499,49 @@ float score_toplevel_move(board_t b, enum direction dir) {
     HASH_DEL(state.caches, cache);
     free(cache);
   }
-  return res;
+  pthread_mutex_lock(&mutex);
+  score[dir] = res;
+  search_completed[dir] = true;
+  pthread_mutex_unlock(&mutex);
+  pthread_cond_signal(&search_cond);
 }
 
 /* Find the best move for a given board. */
-enum direction find_best_move(board_t b) {
+enum direction find_best_move(board_t b, thread_pool *pool) {
   enum direction dir = UP;
-  float best = 0;
+  float best = 0.0f;
   enum direction bestmove = BOTTOM_OF_DIRECTION;
+  search_job *p = NULL;
 
   print_board(b);
 
+  pthread_mutex_lock(&mutex);
   for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
-    float res = score_toplevel_move(b, dir);
+    score[dir] = 0.0f;
+    search_completed[dir] = false;
+  }
+  pthread_mutex_unlock(&mutex);
 
-    if(res > best) {
-      best = res;
+  for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
+    p = (search_job *)malloc(sizeof(search_job));
+    p->b = b;
+    p->dir = dir;
+    thread_pool_add_job(pool, score_toplevel_move, (void *)p);
+  }
+  pthread_mutex_lock(&mutex);
+  while (search_completed[UP] == false ||
+         search_completed[DOWN] == false ||
+         search_completed[LEFT] == false ||
+         search_completed[RIGHT] == false) {
+    pthread_cond_wait(&search_cond, &mutex);
+  }
+  for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
+    if (score[dir] >=best) {
+      best = score[dir];
       bestmove = dir;
     }
   }
-
+  pthread_mutex_unlock(&mutex);
   return bestmove;
 }
 
@@ -537,7 +578,11 @@ void play_game(void)
   board_t b = initial_board();
   int moveno = 0;
   int scorepenalty = 0; // "penalty" for obtaining free 4 tiles
+  thread_pool *pool = NULL;
 
+  thread_pool_create(&pool, SEARCH_THREAD_NUM);
+  pthread_mutex_init(&mutex, NULL);
+  pthread_cond_init(&search_cond, NULL);
   while(true) {
     enum direction dir;
     board_t newboard;
@@ -549,7 +594,7 @@ void play_game(void)
     if (dir == BOTTOM_OF_DIRECTION)
       break; // no legal moves
 
-    dir = find_best_move(b);
+    dir = find_best_move(b, pool);
     if (dir == BOTTOM_OF_DIRECTION)
       break;
     fprintf(stdout, "%c\n", "UDLR"[dir]);
@@ -565,6 +610,14 @@ void play_game(void)
     b = insert_tile_rand(newboard, tile);
   }
   print_board(b);
+  thread_pool_destory(&pool);
+  pthread_mutex_destroy(&mutex);
+  pthread_cond_destroy(&search_cond);
+}
+
+void proc(void *arg)
+{
+  printf("%d\n", (int)arg);
 }
 
 int main()

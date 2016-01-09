@@ -52,6 +52,7 @@ typedef enum boolean
 #define THINKING_DURATION     200     /* in million seconds */
 #define MIN_SEARCH_DEPTH      3
 #define MAX_SEARCH_DEPTH      15
+#define SEARCH_THREAD_NUM     4
 
 #define AI_ENGINE                    expectimax /* minmax or expectimax */
 #define __AI_ENGINE_CREATE(name, a)  name##_create(a)

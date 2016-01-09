@@ -37,6 +37,8 @@ bin_PROGRAMS = 2048\
 2048_LDADD = -lm
 
 2048AI_SOURCES = \
+	ai/utils/list.c \
+	ai/utils/thread_pool.c \
 	2048.c
 
 2048AI_LDFLAGS =
