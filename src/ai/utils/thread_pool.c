@@ -37,10 +37,17 @@ bool thread_pool_create(thread_pool **self, uint8 thread_num)
     if (ret == true) {
       (*self)->pthreads = (pthread_t *)malloc(sizeof(pthread_t) * thread_num);
       if (NULL != (*self)->pthreads) {
+        pthread_attr_t attr;
+        struct sched_param param;
+        pthread_attr_init(&attr);
+        pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+        param.sched_priority = 10;
+        pthread_attr_setschedparam(&attr, &param);
         for (i = 0; i < thread_num; i++) {
-          pthread_create(&(*self)->pthreads[i], NULL, thread_pool_func,
+          pthread_create(&(*self)->pthreads[i], &attr, thread_pool_func,
             (void *)(*self));
         }
+        pthread_attr_destroy(&attr);
       }
     } else {
       thread_pool_destory(self);

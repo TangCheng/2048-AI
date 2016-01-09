@@ -135,7 +135,8 @@ static board_t col_down_table[65536];
 static float heur_score_table[65536];
 static float score_table[65536];
 static float score[BOTTOM_OF_DIRECTION];
-static bool search_completed[BOTTOM_OF_DIRECTION];
+static search_job search_jobs[BOTTOM_OF_DIRECTION];
+static uint8 search_completed;
 static pthread_mutex_t mutex;
 static pthread_cond_t search_cond;
 
@@ -468,7 +469,6 @@ void score_toplevel_move(void *arg) {
   search_job *p = (search_job *)arg;
   board_t b = p->b;
   enum direction dir = p->dir;
-  free(p);
   float res = 0.0f;
 #ifdef SHOW_STEP_ELAPSED_TIME
   struct timeval start, finish;
@@ -476,7 +476,7 @@ void score_toplevel_move(void *arg) {
 #endif
   eval_state state;
   int distinct = count_distinct_tiles(b);
-  state.depth_limit = MAX(MIN_SEARCH_DEPTH, distinct - 2);
+  state.depth_limit = MIN(8, distinct / 2 + 2);
   state.moves_evaled = 0;
   state.cachehits = 0;
   state.maxdepth = 0;
@@ -501,7 +501,7 @@ void score_toplevel_move(void *arg) {
   }
   pthread_mutex_lock(&mutex);
   score[dir] = res;
-  search_completed[dir] = true;
+  search_completed |= 1 << dir;
   pthread_mutex_unlock(&mutex);
   pthread_cond_signal(&search_cond);
 }
@@ -511,28 +511,20 @@ enum direction find_best_move(board_t b, thread_pool *pool) {
   enum direction dir = UP;
   float best = 0.0f;
   enum direction bestmove = BOTTOM_OF_DIRECTION;
-  search_job *p = NULL;
 
   print_board(b);
 
   pthread_mutex_lock(&mutex);
-  for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
-    score[dir] = 0.0f;
-    search_completed[dir] = false;
-  }
+  search_completed = 0x00;
   pthread_mutex_unlock(&mutex);
 
   for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
-    p = (search_job *)malloc(sizeof(search_job));
-    p->b = b;
-    p->dir = dir;
-    thread_pool_add_job(pool, score_toplevel_move, (void *)p);
+    search_jobs[dir].b = b;
+    search_jobs[dir].dir = dir;
+    thread_pool_add_job(pool, score_toplevel_move, (void *)&search_jobs[dir]);
   }
   pthread_mutex_lock(&mutex);
-  while (search_completed[UP] == false ||
-         search_completed[DOWN] == false ||
-         search_completed[LEFT] == false ||
-         search_completed[RIGHT] == false) {
+  while (search_completed != 0x0F) {
     pthread_cond_wait(&search_cond, &mutex);
   }
   for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
