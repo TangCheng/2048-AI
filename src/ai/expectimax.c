@@ -227,7 +227,7 @@ static void expectimax_score_toplevel_move(void *arg)
   uint32 distinct = 0;
 
   distinct = board_count_distinct_tiles(b);
-  state.depth_limit = MAX(depth, distinct / 2 + 1);
+  state.depth_limit = MAX(depth, distinct - 4);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
