@@ -121,12 +121,12 @@ enum direction expectimax_search(expectimax *self, board *b,
 
   if (self != NULL && b != NULL && depth != 0)
   {
-    pthread_mutex_lock(&self->search_mutex);
+    //pthread_mutex_lock(&self->search_mutex);
     for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
       self->search_score[dir] = 0.0f;
     }
     self->search_completed = 0;
-    pthread_mutex_unlock(&self->search_mutex);
+    //pthread_mutex_unlock(&self->search_mutex);
     //LOG("board scores: heur %.0f", expectimax_score_heur_board(self, b));
     for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
       self->search_jobs[dir].b = b;
@@ -227,7 +227,7 @@ static void expectimax_score_toplevel_move(void *arg)
   uint32 distinct = 0;
 
   distinct = board_count_distinct_tiles(b);
-  state.depth_limit = MAX(depth, distinct - 4);
+  state.depth_limit = MAX(depth, (distinct >> 1) + 1);
   state.current_depth = 0;
   state.max_depth = 0;
   state.cache_hits = 0;
@@ -257,8 +257,8 @@ static void expectimax_score_toplevel_move(void *arg)
     free(cache);
   }
 
-  pthread_mutex_lock(&self->search_mutex);
   self->search_score[dir] = res;
+  pthread_mutex_lock(&self->search_mutex);
   self->search_completed |= 1 << dir;
   pthread_mutex_unlock(&self->search_mutex);
   pthread_cond_signal(&self->search_cond);
