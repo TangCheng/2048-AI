@@ -476,7 +476,7 @@ void score_toplevel_move(void *arg) {
 #endif
   eval_state state;
   int distinct = count_distinct_tiles(b);
-  state.depth_limit = MIN(8, distinct / 2 + 2);
+  state.depth_limit = 6; //MAX(MIN_SEARCH_DEPTH, distinct - 2);
   state.moves_evaled = 0;
   state.cachehits = 0;
   state.maxdepth = 0;
@@ -527,13 +527,13 @@ enum direction find_best_move(board_t b, thread_pool *pool) {
   while (search_completed != 0x0F) {
     pthread_cond_wait(&search_cond, &mutex);
   }
+  pthread_mutex_unlock(&mutex);
   for (dir = UP; dir < BOTTOM_OF_DIRECTION; dir++) {
     if (score[dir] >=best) {
       best = score[dir];
       bestmove = dir;
     }
   }
-  pthread_mutex_unlock(&mutex);
   return bestmove;
 }
 
@@ -572,7 +572,7 @@ void play_game(void)
   int scorepenalty = 0; // "penalty" for obtaining free 4 tiles
   thread_pool *pool = NULL;
 
-  thread_pool_create(&pool, SEARCH_THREAD_NUM);
+  thread_pool_create(&pool, sysconf(_SC_NPROCESSORS_ONLN) + 1);
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&search_cond, NULL);
   while(true) {

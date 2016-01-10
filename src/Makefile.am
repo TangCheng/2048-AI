@@ -28,13 +28,14 @@ bin_PROGRAMS = 2048\
 	ai/utils/tree.c \
 	ai/utils/list.c \
 	ai/utils/hash.c \
+	ai/utils/thread_pool.c \
 	ai/board_pool.c \
 	ai/expectimax.c \
 	main.c
 
 2048_LDFLAGS =
 
-2048_LDADD = -lm
+2048_LDADD = -lm -lpthread
 
 2048AI_SOURCES = \
 	ai/utils/list.c \
