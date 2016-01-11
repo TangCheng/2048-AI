@@ -307,17 +307,11 @@ static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root)
       value = minmax_search_engine(self, depth - 1, child_node);
       if (bd->r == PLAYER_TURN)
       {
-        if (value > bd->value)
-        {
-          bd->value = value;
-        }
+        bd->value = MAX(value, bd->value);
       }
       else
       {
-        if (value < bd->value)
-        {
-          bd->value = value;
-        }
+        bd->value = MIN(value, bd->value);
       }
       child_node = tree_get_sibling(self->bt, child_node);
     }

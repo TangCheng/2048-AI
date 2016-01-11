@@ -34,7 +34,7 @@ void input_destory(input **self)
 {
   if (*self != NULL)
   {
-    tcsetattr(STDIN_FILENO, TCSANOW, &(*self)->new_settings);
+    tcsetattr(STDIN_FILENO, TCSANOW, &(*self)->stored_settings);
     free(*self);
     *self = NULL;
   }
@@ -42,33 +42,29 @@ void input_destory(input **self)
 
 bool input_parser_alphabet_key(input *self, char in)
 {
-  bool got = false;
+  bool got = true;
   switch (in)
   {
     case 'w':
     case 'W':
       self->dir = UP;
-      got = true;
       break;
     case 'a':
     case 'A':
       self->dir = LEFT;
-      got = true;
       break;
     case 's':
     case 'S':
       self->dir = DOWN;
-      got = true;
       break;
     case 'd':
     case 'D':
       self->dir = RIGHT;
-      got = true;
       break;
     case 0x1B:
       self->dir = BOTTOM_OF_DIRECTION;
-      got = true;
     default:
+      got = false;
       break;
   }
   return got;
@@ -76,26 +72,23 @@ bool input_parser_alphabet_key(input *self, char in)
 
 bool input_parser_direction_key(input *self, char in)
 {
-  bool got = false;
+  bool got = true;
   switch (in)
   {
     case 'A':
       self->dir = UP;
-      got = true;
       break;
     case 'B':
       self->dir = DOWN;
-      got = true;
       break;
     case 'C':
       self->dir = RIGHT;
-      got = true;
       break;
     case 'D':
       self->dir = LEFT;
-      got = true;
       break;
     default:
+      got = false;
       break;
   }
   return got;
