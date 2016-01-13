@@ -52,6 +52,8 @@ typedef struct _eval_state
 #define SCORE_LOST_PENALTY          200000.0f
 #define SCORE_MONOTONICITY_POWER    4.0f
 #define SCORE_MONOTONICITY_WEIGHT   47.0f
+#define SCORE_SMOOTHNESS_POWER      1.5f
+#define SCORE_SMOOTHNESS_WEIGHT     13.0f
 #define SCORE_SUM_POWER             3.5f
 #define SCORE_SUM_WEIGHT            11.0f
 #define SCORE_MERGES_WEIGHT         700.0f
@@ -159,6 +161,7 @@ static void expectimax_init_table(expectimax *self)
   float sum = 0.0f;
   float monotonicity_left = 0.0f;
   float monotonicity_right = 0.0f;
+  float smoothness = 0.0f;
   int empty = 0;
   int merges = 0;
   int prev = 0;
@@ -194,8 +197,8 @@ static void expectimax_init_table(expectimax *self)
       merges += 1 + counter;
     }
 
-    monotonicity_left = 0;
-    monotonicity_right = 0;
+    monotonicity_left = 0.0f;
+    monotonicity_right = 0.0f;
     for (i = 1; i < COLS_OF_BOARD; i++) {
         if (line[i - 1] > line[i]) {
             monotonicity_left += pow(line[i - 1], SCORE_MONOTONICITY_POWER)
@@ -206,11 +209,18 @@ static void expectimax_init_table(expectimax *self)
         }
     }
 
+    smoothness = 0.0f;
+    for (i = 1; i < COLS_OF_BOARD - 1; i++) {
+      smoothness += pow(abs(line[i] - line[i - 1]), SCORE_SMOOTHNESS_POWER);
+      smoothness += pow(abs(line[i] - line[i + 1]), SCORE_SMOOTHNESS_POWER);
+    }
+
     self->heur_score_table[row] = SCORE_LOST_PENALTY +
         SCORE_EMPTY_WEIGHT * empty +
         SCORE_MERGES_WEIGHT * merges -
         SCORE_MONOTONICITY_WEIGHT * MIN(monotonicity_left, monotonicity_right) -
-        SCORE_SUM_WEIGHT * sum;
+        SCORE_SUM_WEIGHT * sum -
+        SCORE_SMOOTHNESS_WEIGHT * smoothness;
   }
 }
 
@@ -326,7 +336,6 @@ static float expectimax_score_tilechoose_node(expectimax *self,
     //pthread_mutex_unlock(&self->search_mutex);
     board_destory(&bd);
   }
-  free(pos_array);
   //LOG("res is %f", res);
   res = res / availables_count;
 

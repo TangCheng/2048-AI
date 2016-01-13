@@ -144,6 +144,8 @@ static pthread_cond_t search_cond;
 static const float SCORE_LOST_PENALTY = 200000.0f;
 static const float SCORE_MONOTONICITY_POWER = 4.0f;
 static const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
+static const float SCORE_SMOOTHNESS_POWER = 1.5f;
+static const float SCORE_SMOOTHNESS_WEIGHT = 13.0f;
 static const float SCORE_SUM_POWER = 3.5f;
 static const float SCORE_SUM_WEIGHT = 11.0f;
 static const float SCORE_MERGES_WEIGHT = 700.0f;
@@ -209,11 +211,18 @@ void init_tables()
       }
     }
 
+    float smoothness = 0.0f;
+    for (int i = 1; i < COLS_OF_BOARD - 1; i++) {
+      smoothness += pow(abs(line[i] - line[i - 1]), SCORE_SMOOTHNESS_POWER);
+      smoothness += pow(abs(line[i] - line[i + 1]), SCORE_SMOOTHNESS_POWER);
+    }
+
     heur_score_table[row] = SCORE_LOST_PENALTY +
         SCORE_EMPTY_WEIGHT * empty +
         SCORE_MERGES_WEIGHT * merges -
         SCORE_MONOTONICITY_WEIGHT * MIN(monotonicity_left, monotonicity_right) -
-        SCORE_SUM_WEIGHT * sum;
+        SCORE_SUM_WEIGHT * sum -
+        SCORE_SMOOTHNESS_WEIGHT * smoothness;
 
 #ifndef MERGE_ONCE_PER_ROW_OR_COL
     // execute a move to the left
@@ -476,7 +485,7 @@ void score_toplevel_move(void *arg) {
 #endif
   eval_state state;
   int distinct = count_distinct_tiles(b);
-  state.depth_limit = 6; //MAX(MIN_SEARCH_DEPTH, distinct - 2);
+  state.depth_limit = MAX(MIN_SEARCH_DEPTH, (distinct >> 1) + 1);
   state.moves_evaled = 0;
   state.cachehits = 0;
   state.maxdepth = 0;

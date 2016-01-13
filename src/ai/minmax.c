@@ -276,7 +276,6 @@ static void minmax_new_level_for_computer(minmax *self, tree_node *node,
     //new_bd->value = evaluator_get_value(self->be, new_bd->b);
     tree_insert(self->bt, node, (void *)new_bd);
   }
-  free(pos_array);
 }
 
 static double minmax_search_engine(minmax *self, uint32 depth, tree_node *root)

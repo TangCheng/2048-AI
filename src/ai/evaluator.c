@@ -328,6 +328,7 @@ uint32 evaluator_max_value(evaluator *self, board *b)
 {
   uint32 max = 0;
   uint32 x = 0, y = 0;
+  uint32 value = 0;
 
   if (self != NULL && b != NULL)
   {
@@ -338,7 +339,8 @@ uint32 evaluator_max_value(evaluator *self, board *b)
     {
       for (y = 0; y < rows; y++)
       {
-        max = MAX(max, board_get_value(b, x, y));
+        value = board_get_value(b, x, y);
+        max = MAX(max, value);
       }
     }
   }

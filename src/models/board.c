@@ -9,6 +9,7 @@ typedef struct _board
   uint32  rows;
   uint32  cols;
   board_t contents;
+  uint64  *availables;
 } board;
 
 #define OFFSET_BY_X_Y(x, y) ((y) * ELEMENT_BITS * COLS_OF_BOARD + (x) * ELEMENT_BITS)
@@ -27,6 +28,7 @@ bool board_create(board **self, uint32 rows, uint32 cols)
     (*self)->rows = rows;
     (*self)->cols = cols;
     (*self)->contents = 0ULL;
+    (*self)->availables = (uint64 *)malloc(sizeof(uint64) * rows * cols);
     ret = true;
   }
 
@@ -37,6 +39,7 @@ void board_destory(board **self)
 {
   if (*self != NULL)
   {
+    free((*self)->availables);
     free(*self);
     *self = NULL;
   }
@@ -172,22 +175,19 @@ uint64 *board_get_availables(board *self)
 
   if (self != NULL)
   {
-    pos_array = (uint64 *)malloc(sizeof(uint64) * self->rows * self->cols);
-    if (pos_array != NULL)
+    pos_array = self->availables;
+    memset((char *)pos_array, 0, sizeof(uint64) * self->rows * self->cols);
+    for (y = 0; y < self->rows; y++)
     {
-      memset((char *)pos_array, 0, sizeof(uint64) * self->rows * self->cols);
-      for (y = 0; y < self->rows; y++)
+      for (x = 0; x < self->cols; x++)
       {
-        for (x = 0; x < self->cols; x++)
+        power_val = board_get_power_val(self, x, y);
+        if (power_val == 0)
         {
-          power_val = board_get_power_val(self, x, y);
-          if (power_val == 0)
-          {
-            pos_array[len] = x;
-            pos_array[len] <<= 32;
-            pos_array[len] |= y;
-            len++;
-          }
+          pos_array[len] = x;
+          pos_array[len] <<= 32;
+          pos_array[len] |= y;
+          len++;
         }
       }
     }

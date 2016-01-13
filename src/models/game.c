@@ -50,7 +50,6 @@ static void game_init(game *self)
     pos_array_len = board_count_availables(self->b[self->current_board]);
     pos_array = board_get_availables(self->b[self->current_board]);
     pos = random_generator_select(self->rg, pos_array, pos_array_len);
-    free(pos_array);
     board_set_value_by_pos(self->b[self->current_board], pos, val);
   }
 #if defined(AUTO_PLAY) && !defined(THINKING_BY_DEPTH)
@@ -196,7 +195,6 @@ static void game_new_step(game *self)
       self->score_penalty += val;
     }
   }
-  free(pos_array);
 }
 
 static bool game_is_over(game *self)
